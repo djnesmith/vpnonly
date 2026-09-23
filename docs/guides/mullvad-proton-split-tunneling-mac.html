@@ -52,13 +52,13 @@
   <li><a href="expressvpn-split-tunneling-mac.html">ExpressVPN</a> &mdash; why it can't be used this way</li>
 </ul>
 
-<h2>AirVPN</h2>
+<h2 id="airvpn">AirVPN</h2>
 <p>AirVPN's <a href="https://airvpn.org/generator/">config generator</a> (sign in first) builds a WireGuard <code>.conf</code>. Its configs include a preshared key, which VPNonly handles without any extra step.</p>
 
-<h2>Your own WireGuard server</h2>
+<h2 id="own-server">Your own WireGuard server</h2>
 <p>A VPS with WireGuard costs a few dollars a month and gives you an exit IP nobody else shares. Use the client config you generated when you set the server up.</p>
 
-<h2>Importing a config</h2>
+<h2 id="importing">Importing a config</h2>
 <p>In <a href="../">VPNonly</a>: open the <strong>⋯</strong> menu, choose <strong>Import WireGuard config…</strong>, and pick either a single <code>.conf</code> or the zip Mullvad gives you. The zip becomes one entry &mdash; pick a country from the menu at the bottom, the same way you would with NordVPN. Then flip the switch next to any app.</p>
 <p>The exact privileged engine used by the app is public for inspection. The historical command-line prototype is retained on GitHub for reference, but it is not the current app engine.</p>
 
