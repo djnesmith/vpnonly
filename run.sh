@@ -200,7 +200,9 @@ if [ -d "$TARGET" ] && [[ "$TARGET" == *.app ]] && [ "$(running_count)" -gt 0 ];
         *) printf '  left %s alone, still on your normal connection.\n' "$NAME"; exit 1 ;;
     esac
     printf '  quitting %s…\n' "$NAME"
-    osascript -e "quit app \"$NAME\"" 2>/dev/null || true
+    # The name goes in as an argument, never into the script text: this runs
+    # as root and an app's folder name is whatever its author chose.
+    osascript -e 'on run argv' -e 'quit app (item 1 of argv)' -e 'end run' "$NAME" 2>/dev/null || true
     for _ in $(seq 1 40); do
         [ "$(running_count)" -eq 0 ] && break
         sleep 0.25

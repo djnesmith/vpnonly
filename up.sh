@@ -9,7 +9,6 @@
 set -euo pipefail
 
 CLIENT_IP="${CLIENT_IP:-10.5.0.2}"      # NordLynx always assigns 10.5.0.2
-COUNTRY="${COUNTRY:-sg}"
 ANCHOR="com.apple/vpnonly-cli"
 WG=/opt/homebrew/bin/wg
 WG_GO=/opt/homebrew/bin/wireguard-go
@@ -37,7 +36,11 @@ while [ -L "$SELF" ]; do
 done
 DIR="$(cd "$(dirname "$SELF")" && pwd)"
 KEYFILE="$CONF/wg.key"
-mkdir -p "$CONF"; chown "$RUSER" "$CONF"
+mkdir -p "$CONF"; chown "$RUSER" "$CONF"; chmod 700 "$CONF"
+# Exit country: COUNTRY=xx wins, then ~/.config/vpnonly/country, then Singapore.
+# The file matters because `vpnonly` re-execs through sudo, which drops COUNTRY.
+COUNTRY="${COUNTRY:-$(tr -d '[:space:]' < "$CONF/country" 2>/dev/null || true)}"
+COUNTRY="${COUNTRY:-sg}"
 
 if [ -z "${1:-}" ] && [ ! -f "$KEYFILE" ]; then
     echo "no key at $KEYFILE"
@@ -78,7 +81,9 @@ pfctl -s rules 2>/dev/null | grep -Eq '^[[:space:]]*anchor "com\.apple/\*" all[[
 PROVIDER_CONF="${1:-}"
 if [ -n "$PROVIDER_CONF" ]; then
     [ -f "$PROVIDER_CONF" ] || { echo "no such file: $PROVIDER_CONF"; exit 1; }
-    PARSED=$("$DIR/parse-wg.py" "$PROVIDER_CONF" "$CONF/wg-session.conf") || exit 1
+    # umask: the session file carries the private key. -I: root must not load
+    # the user's site-packages, which sudo's kept HOME would otherwise point at.
+    PARSED=$(umask 077; python3 -I "$DIR/parse-wg.py" "$PROVIDER_CONF" "$CONF/wg-session.conf") || exit 1
     CLIENT_IP=$(echo "$PARSED" | awk '{print $1}')
     ENDPOINT=$(echo "$PARSED" | awk '{print $2}')
     STATION="${ENDPOINT%:*}"; PORT="${ENDPOINT##*:}"
@@ -92,15 +97,17 @@ elif [ -n "${ENDPOINT:-}" ]; then
     HOST="$STATION"
 else
     PORT=51820
-    CID=$(curl -sf https://api.nordvpn.com/v1/servers/countries | python3 -c "
+    # -q: sudo keeps HOME, so root curl would otherwise read the user's ~/.curlrc.
+    CID=$(curl -q -sf https://api.nordvpn.com/v1/servers/countries | python3 -I -c '
 import json,sys
 cs=json.load(sys.stdin)
-print(next(c['id'] for c in cs if c['code'].lower()=='$COUNTRY'.lower()))")
-    read -r HOST STATION PUBKEY <<< "$(curl -sf "https://api.nordvpn.com/v1/servers/recommendations?filters\[country_id\]=$CID&filters\[servers_technologies\]\[identifier\]=wireguard_udp&limit=1" | python3 -c "
+print(next(c["id"] for c in cs if c["code"].lower()==sys.argv[1].lower()))' "$COUNTRY")
+    case "$CID" in ''|*[!0-9]*) echo "no NordVPN servers for country '$COUNTRY'"; exit 1 ;; esac
+    read -r HOST STATION PUBKEY <<< "$(curl -q -sf "https://api.nordvpn.com/v1/servers/recommendations?filters\[country_id\]=$CID&filters\[servers_technologies\]\[identifier\]=wireguard_udp&limit=1" | python3 -I -c '
 import json,sys
 s=json.load(sys.stdin)[0]
-pk=next(m['value'] for t in s['technologies'] if t['identifier']=='wireguard_udp' for m in t.get('metadata',[]))
-print(s['hostname'], s['station'], pk)")"
+pk=next(m["value"] for t in s["technologies"] if t["identifier"]=="wireguard_udp" for m in t.get("metadata",[]))
+print(s["hostname"], s["station"], pk)')"
 fi
 echo "server: $HOST ($STATION:$PORT)"
 
@@ -152,7 +159,8 @@ ifconfig "$IF" inet "$CLIENT_IP" "$CLIENT_IP" netmask 255.255.255.255 mtu 1420 u
 printf '%s\n' "$IF" > "$CONF/tunnel-if"
 printf '%s\n' "$CLIENT_IP" > "$CONF/tunnel-ip"
 printf '%s\n' "$WG_PID" > "$CONF/tunnel-pid"
-chown "$RUSER" "$CONF/tunnel-if" "$CONF/tunnel-ip" "$CONF/tunnel-pid"
+printf '%s\n' "$HOST" > "$CONF/tunnel-server"
+chown "$RUSER" "$CONF/tunnel-if" "$CONF/tunnel-ip" "$CONF/tunnel-pid" "$CONF/tunnel-server"
 
 # --- PF: steer group traffic into the tunnel ---------------------------------
 # Everything goes in VPNonly's own anchor. /etc/pf.conf is never read, rebuilt
@@ -194,10 +202,10 @@ chown "$RUSER" "$CONF/pf-token" 2>/dev/null || true
 
 # --- verify -------------------------------------------------------------------
 echo -n "exit IP via tunnel: "
-"$DIR/vpnrun" "$RUSER" /usr/bin/curl -s --max-time 15 https://api.ipify.org || echo -n "(no reply yet)"
+"$DIR/vpnrun" "$RUSER" /usr/bin/curl -q -s --max-time 15 https://api.ipify.org || echo -n "(no reply yet)"
 echo
 echo -n "your normal IP:     "
-curl -s --max-time 10 https://api.ipify.org; echo
+curl -q -s --max-time 10 https://api.ipify.org; echo
 echo
 printf '  \e[2mTunnel up. Nothing is routed through it yet.\n'
 printf '  Run \e[0mvpnonly\e[2m to put an app inside it.\e[0m\n' 

@@ -51,11 +51,11 @@ else
 fi
 
 echo -n "your ip:  "
-curl -s --max-time 8 https://api.ipify.org || echo "(no answer)"
+curl -q -s --max-time 8 https://api.ipify.org || echo "(no answer)"
 echo
 if [ "$(id -u)" = 0 ]; then
     echo -n "vpn ip:   "
-    "$DIR/run.sh" /usr/bin/curl -s --max-time 8 https://api.ipify.org || echo "(no answer)"
+    "$DIR/run.sh" /usr/bin/curl -q -s --max-time 8 https://api.ipify.org || echo "(no answer)"
     echo
 else
     echo "vpn ip:   run with sudo to see the exit IP from inside the tunnel"

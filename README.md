@@ -83,18 +83,23 @@ launcher. macOS offers to install them the first time it's needed.
 
 ## Using it
 
-One command does everything:
-
 ```sh
-vpnonly
+vpnonly            # tick running apps to put on the VPN, untick to take off
+vpnonly rm Slack   # take one off: quit it, reopen it normally
+vpnonly ls         # tunnel up/down, server, exit IP, apps on the VPN
+vpnonly down       # tunnel down (routed apps stay blocked until moved off)
+vpnonly all        # hand the whole Mac back to the NordVPN app
 ```
 
-It asks for your password, because creating a tunnel and firewall rules needs
-root. From source, that's `sudo ./vpnonly`.
+It asks for your password, because the tunnel and firewall rules need root.
 
-That shows what's connected and which apps are inside the tunnel, and lets you
-switch any app in or out with the arrow keys. Connect with `c`, disconnect with
-`d`, quit with `q`.
+The picker lists apps that are running now. macOS fixes a process's group
+when it starts, so every app you tick or untick is quit and reopened. The
+tunnel comes up on the first tick. Docker, Safari, the NordVPN app and the
+terminal you run it from are left out of the list. If the NordVPN app is
+open, `vpnonly` offers to quit it first: the two tunnels can't share the Mac.
+
+Exit country: `echo us > ~/.config/vpnonly/country` (default `sg`).
 
 ### The individual commands
 
