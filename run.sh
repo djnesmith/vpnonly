@@ -149,6 +149,17 @@ fi
 [ -x "$BIN" ] || { echo "not executable: $BIN"; exit 1; }
 [ -x "$DIR/vpnrun" ] || { echo "vpnrun not built — run up.sh first"; exit 1; }
 
+# A process takes the group for life, and the group is only safe while there
+# is a rule for it. With the tunnel down there may be no rule at all, so
+# refuse rather than start something that would run on the normal connection
+# while looking routed.
+CONF="${RHOME:-$HOME}/.config/vpnonly"
+TUN_IF=$(cat "$CONF/tunnel-if" 2>/dev/null || true)
+if [ -z "$TUN_IF" ] || ! ifconfig "$TUN_IF" >/dev/null 2>&1; then
+    echo "the tunnel is down, so nothing can be routed. Run up.sh (or vpnonly) first."
+    exit 1
+fi
+
 NAME=$(basename "$TARGET" .app)
 VPNGID=$(dscl . -read /Groups/vpnonly PrimaryGroupID 2>/dev/null | awk '{print $2}')
 

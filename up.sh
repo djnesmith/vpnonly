@@ -181,7 +181,15 @@ if ! PF_MSG=$(pfctl -q -a "$ANCHOR" -f "$PFRULES" 2>&1); then
     exit 1
 fi
 rm -f "$PFRULES"
-pfctl -E 2>&1 | awk '/Token/{print $NF}' > "$CONF/pf-token" || true
+# down.sh keeps its enable reference while an app is still held by the kill
+# switch, so one may already be ours. Take the new reference before releasing
+# the old one: the count must never touch zero with a tagged app alive, or the
+# block rule would go unenforced for that instant.
+NEW_TOKEN=$(pfctl -E 2>&1 | awk '/Token/{print $NF}') || NEW_TOKEN=""
+if [ -s "$CONF/pf-token" ]; then
+    pfctl -X "$(cat "$CONF/pf-token")" 2>/dev/null || true
+fi
+if [ -n "$NEW_TOKEN" ]; then printf '%s\n' "$NEW_TOKEN" > "$CONF/pf-token"; else : > "$CONF/pf-token"; fi
 chown "$RUSER" "$CONF/pf-token" 2>/dev/null || true
 
 # --- verify -------------------------------------------------------------------

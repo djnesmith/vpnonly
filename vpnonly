@@ -25,9 +25,10 @@ SELF="$DIR/$(basename "$SELF")"
 RUSER="${SUDO_USER:?run from your normal account, not as root}"
 RHOME=$(dscl . -read "/Users/$RUSER" NFSHomeDirectory 2>/dev/null | awk '{print $2}')
 CONF="${RHOME:-$HOME}/.config/vpnonly"
+ANCHOR="com.apple/vpnonly-cli"
 
 VPNONLY_VERSION="1.0.2"   # rewritten by package-cli.sh at release time
-MYIP=""; VPNIP=""; SCREEN="list"; NOTE=""; ROWS=24; UPDATE=""
+MYIP=""; VPNIP=""; SCREEN="list"; NOTE=""; ROWS=24; UPDATE=""; BLOCKED=0
 
 cannot_route() {
     case "$(basename "$1")" in
@@ -89,9 +90,41 @@ refresh_ips() {
     fi
 }
 
+# True only when the block rule is in the kernel and PF is enforcing it. The
+# status line may call an app blocked on this evidence and nothing weaker:
+# tagged processes with the tunnel down is also what an unprotected state
+# looks like.
+kill_switch_loaded() {
+    local g; g=$(vpn_gid); [ -n "$g" ] || return 1
+    pfctl -s info 2>/dev/null | grep -q '^Status: Enabled' || return 1
+    pfctl -a "$ANCHOR" -s rules 2>/dev/null |
+        grep -q "^block return out quick on ! lo0 all group = $g\$"
+}
+
+# Anything at all still carrying the group, .app bundle or not.
+group_busy() {
+    local g; g=$(vpn_gid); [ -n "$g" ] || return 1
+    ps -axo rgid= 2>/dev/null | awk -v g="$g" '$1 == g { f = 1; exit } END { exit !f }'
+}
+
+# down.sh leaves the kill switch loaded while an app it launched is still
+# open. Once the last one has gone and the tunnel is down, finish the teardown
+# it started, so PF is not left enabled on our reference for nothing.
+settle() {
+    tunnel_up && return 0
+    [ -s "$CONF/pf-token" ] || return 0
+    group_busy && return 0
+    "$DIR/down.sh" >/dev/null 2>&1 || true
+}
+
 reload_state() {
     ROUTED=()
     IFS=$'\n' read -r -d '' -a ROUTED < <(routed_apps && printf '\0') || true
+    settle
+    BLOCKED=0
+    if ! tunnel_up && [ "${#ROUTED[@]}" -gt 0 ]; then
+        kill_switch_loaded && BLOCKED=1
+    fi
 }
 
 # Look for a newer release at most once a day, detached, and only ever read
@@ -181,10 +214,14 @@ connection_line() {
         printf '\n'
     else
         printf '  \e[2m○ not connected\e[0m'
-        if [ "${#ROUTED[@]}" -gt 0 ]; then
-            # Tagged apps with no tunnel are refused, not leaking. Say that,
-            # rather than calling them protected.
+        if [ "$BLOCKED" -eq 1 ]; then
+            # Tagged apps with the block rule loaded are refused, not leaking.
+            # Say that, rather than calling them protected.
             printf '\e[2m ·\e[0m \e[33m%d app%s blocked by the kill switch\e[0m' \
+                "${#ROUTED[@]}" "$([ "${#ROUTED[@]}" -eq 1 ] || echo s)"
+        elif [ "${#ROUTED[@]}" -gt 0 ]; then
+            # Tagged, no rule: on the normal connection. D reloads the block.
+            printf '\e[2m ·\e[0m \e[31m%d app%s tagged but unprotected, press D\e[0m' \
                 "${#ROUTED[@]}" "$([ "${#ROUTED[@]}" -eq 1 ] || echo s)"
         fi
         printf '\n'
@@ -209,7 +246,8 @@ draw_list() {
         state=""
         if is_on "${APPS[$i]}"; then
             if tunnel_up; then state=$'\e[32m● in VPN\e[0m'
-            else state=$'\e[33m● blocked\e[0m'; fi
+            elif [ "$BLOCKED" -eq 1 ]; then state=$'\e[33m● blocked\e[0m'
+            else state=$'\e[31m● unprotected\e[0m'; fi
         fi
         if [ "$i" -eq "$SEL" ]; then
             printf '\e[36m▶\e[0m \e[1m%-30s\e[0m %b\n' "$name" "$state"
@@ -232,10 +270,14 @@ draw_app() {
         if tunnel_up; then
             printf '  in the VPN      \e[32myes\e[0m\e[2m, through %s\e[0m\n' "$(tunnel_if)"
             printf '  its address     \e[32m%s\e[0m\n' "${VPNIP:-checking…}"
-        else
+        elif [ "$BLOCKED" -eq 1 ]; then
             printf '  in the VPN      \e[33mheld offline\e[0m\n'
             printf '  \e[2m                the tunnel is down, so it is refused rather\n'
             printf '                  than quietly using your normal connection\e[0m\n'
+        else
+            printf '  in the VPN      \e[31mno, and unprotected\e[0m\n'
+            printf '  \e[2m                it still carries the group but no rule is loaded,\n'
+            printf '                  so it is on your normal connection. D on the list fixes that.\e[0m\n'
         fi
     else
         printf '  in the VPN      \e[2mno\e[0m\n'

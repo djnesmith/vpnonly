@@ -176,7 +176,12 @@ match by *unix group*. That's the entire trick.
 
    The `block` rule is the kill switch. If the tunnel goes down, group traffic
    is refused rather than leaking to your ISP, and `return` means the app fails
-   immediately instead of hanging until it times out.
+   immediately instead of hanging until it times out. It has to hold across a
+   deliberate disconnect too: an app keeps the group until it exits, so while
+   any app launched this way is still open, `down.sh` removes only the `pass`
+   rule and leaves the `block` in place. The app is held offline until you quit
+   it (`vpnonly`'s Turn off quits and reopens it outside the group), and the
+   block is cleared once the last one is gone.
 
 2. **`vpnrun`** (a short C file, run via sudo) launches your app with its group
    set to `vpnonly`, then drops privileges back to you. Every helper process
@@ -191,7 +196,7 @@ switched over while it's already open.
 
 **`/etc/pf.conf` is never read, modified or reloaded.** Rules live in a
 dedicated anchor under `com.apple/`, which macOS already evaluates, so other
-firewall tools keep their rules and VPNonly keeps its own. `down.sh` clears
+firewall tools keep their rules and VPNonly keeps its own. `down.sh` touches
 just that anchor and stops just the process it started.
 
 ## Limitations
