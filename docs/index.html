@@ -22,7 +22,7 @@
 <meta name="twitter:description" content="Pick an app, flip a switch, that app is on the VPN. Nothing else changes. $19 once, open-source engine.">
 <meta name="twitter:image" content="https://vpnonly.app/demo-poster.jpg">
 <link rel="icon" type="image/png" href="icon.png">
-<link rel="stylesheet" href="style.css?v=20">
+<link rel="stylesheet" href="style.css?v=21">
 <script data-goatcounter="https://vpnonly.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "7c46f36f17e44f7693519b06b101987a"}'></script>
 </head>
@@ -56,39 +56,22 @@
       <div><span class="dot out"></span>everything else — untouched</div>
     </div>
 
-    <!-- Two identical lists sliding left by their own width make a seamless
-         loop. The second is only there for the loop, so it's hidden from
-         screen readers and the keyboard. -->
+    <!-- each provider is a tile linking to its setup guide -->
     <div class="works">
       <span>Works with</span>
-      <div class="marquee">
-        <ul>
-          <li><a href="guides/nordvpn-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#nordvpn"/></svg>NordVPN</a></li>
-          <li><a href="guides/mullvad-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#mullvad"/></svg>Mullvad</a></li>
-          <li><a href="guides/protonvpn-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#protonvpn"/></svg>Proton VPN</a></li>
-          <li><a href="guides/surfshark-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#surfshark"/></svg>Surfshark</a></li>
-          <li><a href="guides/ivpn-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#ivpn"/></svg>IVPN</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html#airvpn"><svg aria-hidden="true"><use href="logos.svg#airvpn"/></svg>AirVPN</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing"><svg aria-hidden="true"><use href="logos.svg#windscribe"/></svg>Windscribe</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing"><svg aria-hidden="true"><use href="logos.svg#torguard"/></svg>TorGuard</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing"><svg aria-hidden="true"><use href="logos.svg#azirevpn"/></svg>AzireVPN</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing"><svg aria-hidden="true"><use href="logos.svg#ovpn"/></svg>OVPN</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#wireguard"/></svg>any WireGuard config</a></li>
-        </ul>
-        <ul aria-hidden="true">
-          <li><a href="guides/nordvpn-split-tunneling-mac.html" tabindex="-1"><svg aria-hidden="true"><use href="logos.svg#nordvpn"/></svg>NordVPN</a></li>
-          <li><a href="guides/mullvad-split-tunneling-mac.html" tabindex="-1"><svg aria-hidden="true"><use href="logos.svg#mullvad"/></svg>Mullvad</a></li>
-          <li><a href="guides/protonvpn-split-tunneling-mac.html" tabindex="-1"><svg aria-hidden="true"><use href="logos.svg#protonvpn"/></svg>Proton VPN</a></li>
-          <li><a href="guides/surfshark-split-tunneling-mac.html" tabindex="-1"><svg aria-hidden="true"><use href="logos.svg#surfshark"/></svg>Surfshark</a></li>
-          <li><a href="guides/ivpn-split-tunneling-mac.html" tabindex="-1"><svg aria-hidden="true"><use href="logos.svg#ivpn"/></svg>IVPN</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html#airvpn" tabindex="-1"><svg aria-hidden="true"><use href="logos.svg#airvpn"/></svg>AirVPN</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing" tabindex="-1"><svg aria-hidden="true"><use href="logos.svg#windscribe"/></svg>Windscribe</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing" tabindex="-1"><svg aria-hidden="true"><use href="logos.svg#torguard"/></svg>TorGuard</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing" tabindex="-1"><svg aria-hidden="true"><use href="logos.svg#azirevpn"/></svg>AzireVPN</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing" tabindex="-1"><svg aria-hidden="true"><use href="logos.svg#ovpn"/></svg>OVPN</a></li>
-          <li><a href="guides/mullvad-proton-split-tunneling-mac.html" tabindex="-1"><svg aria-hidden="true"><use href="logos.svg#wireguard"/></svg>any WireGuard config</a></li>
-        </ul>
-      </div>
+      <ul class="providers">
+        <li><a href="guides/nordvpn-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#nordvpn"/></svg>NordVPN</a></li>
+        <li><a href="guides/mullvad-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#mullvad"/></svg>Mullvad</a></li>
+        <li><a href="guides/protonvpn-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#protonvpn"/></svg>Proton VPN</a></li>
+        <li><a href="guides/surfshark-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#surfshark"/></svg>Surfshark</a></li>
+        <li><a href="guides/ivpn-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#ivpn"/></svg>IVPN</a></li>
+        <li><a href="guides/mullvad-proton-split-tunneling-mac.html#airvpn"><svg aria-hidden="true"><use href="logos.svg#airvpn"/></svg>AirVPN</a></li>
+        <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing"><svg aria-hidden="true"><use href="logos.svg#windscribe"/></svg>Windscribe</a></li>
+        <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing"><svg aria-hidden="true"><use href="logos.svg#torguard"/></svg>TorGuard</a></li>
+        <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing"><svg aria-hidden="true"><use href="logos.svg#azirevpn"/></svg>AzireVPN</a></li>
+        <li><a href="guides/mullvad-proton-split-tunneling-mac.html#importing"><svg aria-hidden="true"><use href="logos.svg#ovpn"/></svg>OVPN</a></li>
+      </ul>
+      <a class="anyconf" href="guides/mullvad-proton-split-tunneling-mac.html"><svg aria-hidden="true"><use href="logos.svg#wireguard"/></svg>or any WireGuard config</a>
     </div>
 
     <div class="actions">
