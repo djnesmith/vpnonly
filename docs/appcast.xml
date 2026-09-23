@@ -7,13 +7,25 @@
     <language>en</language>
 
     <item>
+      <title>Version 1.9.18</title>
+      <pubDate>Thu, 24 Sep 2026 01:33:20 +0530</pubDate>
+      <sparkle:version>1.9.18</sparkle:version>
+      <sparkle:shortVersionString>1.9.18</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[<p>If another VPN app switches off the Mac&#x27;s firewall, VPNonly now turns it back on and re-applies its rules within a minute; you can also pick a specific server inside a location, and apps installed in folders now show up, with Choose another app… for the rest.</p>]]></description>
+      <enclosure url="https://vpnonly.app/VPNonly-1.9.18.zip"
+                 sparkle:edSignature="Yn6GZdTwu2ZMKH/IqwIqeoXCkebt/QwxDm1Rvrqwra37Au9MR9qpUj4VAwVgY4QszErQummC+5tUbEC7djtgDA=="
+                 length="3231873"
+                 type="application/octet-stream" />
+    </item>
+    <item>
       <title>Version 1.9.17</title>
       <pubDate>Sun, 06 Sep 2026 12:30:13 +0530</pubDate>
       <sparkle:version>1.9.17</sparkle:version>
       <sparkle:shortVersionString>1.9.17</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
       <description><![CDATA[<p>Apps on the VPN can now use the microphone and camera. macOS was blaming VPNonly for those requests and killing the app on the spot — WhatsApp crashed the instant a call started, and Chrome on a video call would have too. VPNonly now launches apps so they answer for their own privacy prompts, the way Terminal does. Also: automatic reconnection after a network change, with a few attempts over a couple of minutes instead of one; quitting with the VPN down and apps still held offline now asks whether to put them back first; a plain log at ~/Library/Logs/VPNonly.</p>]]></description>
-      <enclosure url="https://vpnonly.app/VPNonly-1.9.17.zip"
+      <enclosure url="https://github.com/kanishkdan/vpnonly/releases/download/v1.9.17/VPNonly-1.9.17.zip"
                  sparkle:edSignature="DtrjCYVLzBkdNenJ2JGckbviL7+2w5SzQm29FWtUC26rDTFuTEGpU+1gM8OBH+pv3JbXSxwkQmRfXZSw8MLABQ=="
                  length="3225299"
                  type="application/octet-stream" />

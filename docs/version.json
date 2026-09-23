@@ -1,5 +1,5 @@
 {
-  "version": "1.9.17",
+  "version": "1.9.18",
   "url": "https://vpnonly.app/",
-  "notes": "Apps on the VPN can now use the microphone and camera. macOS was blaming VPNonly for those requests and killing the app on the spot \u2014 WhatsApp crashed the instant a call started, and Chrome on a video call would have too. VPNonly now launches apps so they answer for their own privacy prompts, the way Terminal does. Also: automatic reconnection after a network change, with a few attempts over a couple of minutes instead of one; quitting with the VPN down and apps still held offline now asks whether to put them back first; a plain log at ~/Library/Logs/VPNonly."
+  "notes": "If another VPN app switches off the Mac's firewall, VPNonly now turns it back on and re-applies its rules within a minute; you can also pick a specific server inside a location, and apps installed in folders now show up, with Choose another app\u2026 for the rest."
 }
