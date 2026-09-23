@@ -169,6 +169,10 @@ pre code { line-height: 1.65; }
   content: ""; position: absolute; left: 0; top: 12px;
   width: 6px; height: 1.5px; background: #c2c5cc;
 }
+/* numbered steps keep their numbers, inside the column, without the dash */
+.solo ol { margin-bottom: 16px; max-width: 62ch; padding-left: 22px; }
+.solo ol li { padding-left: 4px; }
+.solo ol li::before { content: none; }
 
 /* a quiet line for people who already own it */
 .ownerbar {
@@ -227,12 +231,6 @@ td.part { color: #6e737b; }
 }
 .providers a:hover { background: #f1f2f4; color: var(--ink); }
 .providers svg { width: 22px; height: 22px; }   /* marks from logos.svg, drawn in the text colour */
-.anyconf {
-  display: inline-flex; align-items: center; gap: 7px; margin-top: 6px;
-  color: var(--faint); text-decoration: none;
-}
-.anyconf:hover { color: var(--ink); }
-.anyconf svg { width: 14px; height: 14px; }
 
 @media (prefers-reduced-motion: reduce) {
   .shot video { animation: none; }
