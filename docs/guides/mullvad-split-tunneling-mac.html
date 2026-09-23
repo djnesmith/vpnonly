@@ -54,6 +54,7 @@
   <li>Choose the whole zip &mdash; VPNonly turns it into a single Mullvad entry with a country picker, the way NordVPN's country list works. Pick the exit country from the menu at the bottom.</li>
   <li>Search for an app, flip its switch. It relaunches once, then it's on the VPN and nothing else is.</li>
 </ol>
+<p><strong>If Mullvad's own app is installed too:</strong> disconnect and quit it before you switch apps on in VPNonly, or uninstall it. Its background service keeps running after the app quits, and when Mullvad disconnects it can turn off the Mac's packet filter, which holds VPNonly's rules as well. VPNonly notices within a minute, turns it back on and re-applies its rules, but a whole-Mac VPN and a per-app one taking turns with the same firewall is not worth the surprise. The config file you imported works without the app.</p>
 <p><strong>Tested</strong> 1 September 2026: imported the full zip, chose Singapore, and VPNonly's own check showed a Mullvad exit address with the Mac's normal address unchanged. Mullvad enforces strict cryptokey routing, which needs VPNonly 1.9.16 or later — earlier versions connect but carry no traffic.</p>
 <p style="margin-top:38px;"><a class="btn" href="https://dodo.pe/get-vpnonly">Get VPNonly for Mac — $19</a></p>
 <p style="font-size:15px;">The app’s <a href="https://github.com/kanishkdan/vpnonly/tree/main/app-engine">exact privileged engine source</a> is public and MIT licensed.</p>

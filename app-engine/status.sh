@@ -1,5 +1,6 @@
 #!/bin/bash
-# Reports only a VPNonly-owned tunnel and its newest completed handshake.
+# Reports only a VPNonly-owned tunnel and its newest completed handshake,
+# plus what PF itself is doing underneath VPNonly's anchor.
 # Root-owned runtime state binds the kernel interface to the exact process we
 # launched; an unrelated utun device is never treated as VPNonly's tunnel.
 set -uo pipefail
@@ -23,6 +24,38 @@ case "$RUSER" in
     *[!A-Za-z0-9._-]*) echo "refusing odd username: $RUSER" >&2; exit 1 ;;
 esac
 STATE_DIR="$STATE_ROOT/$RUSER"
+
+# PF can be switched off underneath a loaded policy: `pfctl -d` is a hard stop
+# that clears every enable reference, VPNonly's included, and the Mullvad app's
+# background service issues one when it disconnects after finding PF off at its
+# first connect. route.sh takes a new reference on its next run, but only if
+# something calls it. A
+# rule PF is not evaluating protects nothing, so every status line also carries
+# the filter state and the group ids VPNonly's anchor currently holds. The app
+# compares them with what it believes is routed and re-asserts at once instead
+# of at its next exit check.
+pf_state() {
+    local info
+    info=$(pfctl -s info 2>/dev/null) || { echo unknown; return; }
+    # The same pattern route.sh already relies on.
+    if printf '%s\n' "$info" | grep -Eq '^Status:[[:space:]]+Enabled'; then
+        echo enabled
+    elif printf '%s\n' "$info" | grep -Eq '^Status:[[:space:]]+Disabled'; then
+        echo disabled
+    else
+        echo unknown
+    fi
+}
+anchor_groups() {
+    local rules ids
+    rules=$(pfctl -a com.apple/vpnonly -s rules 2>/dev/null) || { echo unknown; return; }
+    ids=$(printf '%s\n' "$rules" | awk '
+        { for (i = 1; i + 2 <= NF; i++)
+              if ($i == "group" && $(i + 1) == "=" && $(i + 2) ~ /^[0-9]+$/) print $(i + 2) }
+    ' | sort -un | paste -sd, -)
+    echo "${ids:-none}"
+}
+FILTER="pf=$(pf_state) anchor=$(anchor_groups)"
 
 valid_interface() {
     case "$1" in utun[0-9]*) ;; *) return 1 ;; esac
@@ -74,13 +107,13 @@ unavailable() {
 # A truly absent root-owned record means down. Anything present but unsafe,
 # partial, stale, or inconsistent is unknown rather than a false disconnect.
 if [ ! -e "$STATE_ROOT" ] && [ ! -L "$STATE_ROOT" ]; then
-    echo "STATUS tunnel=0 interface=none latest_handshake=0"
+    echo "STATUS tunnel=0 interface=none latest_handshake=0 $FILTER"
     exit 0
 fi
 safe_root_dir "$STATE_ROOT" || unavailable
 
 if [ ! -e "$STATE_DIR" ] && [ ! -L "$STATE_DIR" ]; then
-    echo "STATUS tunnel=0 interface=none latest_handshake=0"
+    echo "STATUS tunnel=0 interface=none latest_handshake=0 $FILTER"
     exit 0
 fi
 safe_root_dir "$STATE_DIR" || unavailable
@@ -105,7 +138,7 @@ case "$HOST" in ''|*[[:space:]]*) unavailable ;; esac
 # crashed process left stale state behind. If the name was reused, ifconfig
 # succeeds and the stricter process/socket checks below still return unknown.
 if ! ifconfig "$IF" >/dev/null 2>&1; then
-    echo "STATUS tunnel=0 interface=none latest_handshake=0"
+    echo "STATUS tunnel=0 interface=none latest_handshake=0 $FILTER"
     exit 0
 fi
 process_is_ours "$PID" || unavailable
@@ -126,4 +159,4 @@ LATEST=$(printf '%s\n' "$RAW" | /usr/bin/awk '
 ') || unavailable
 case "$LATEST" in ''|*[!0-9]*) unavailable ;; esac
 
-echo "STATUS tunnel=1 interface=$IF latest_handshake=$LATEST"
+echo "STATUS tunnel=1 interface=$IF latest_handshake=$LATEST $FILTER"
