@@ -5,7 +5,8 @@
 #
 # usage: sudo ./up.sh                       NordVPN, Singapore exit (default)
 #        sudo COUNTRY=us ./up.sh            NordVPN, choose exit country
-#        sudo ./up.sh mullvad-sg.conf       any provider: hand it their .conf
+#        sudo ./up.sh provider.conf         another provider's .conf (NordVPN-only in
+#                                           practice for now, see README)
 set -euo pipefail
 
 CLIENT_IP="${CLIENT_IP:-10.5.0.2}"      # NordLynx always assigns 10.5.0.2

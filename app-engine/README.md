@@ -12,9 +12,12 @@ The engine:
 - routes or blocks private per-app groups without changing the Mac's default route;
 - tears down only a tunnel that its root-owned state proves VPNonly created.
 
-The historical command-line prototype remains at the repository root for
-reference. It is not the engine shipped in the current Mac app and is not a
-supported installation path on current macOS.
+The command-line version at the repository root (`vpnonly`, installed with
+Homebrew) is a separate, smaller implementation of the same idea, and it is
+supported. It is not this engine: it loads its own `com.apple/vpnonly-cli` PF
+anchor and runs the stock `wireguard-go`, which is why it works with NordVPN
+only for now. This engine carries the inner-source patch
+(`wireguard-go-nat.patch`) that lets the Mac app use any WireGuard provider.
 
 VPNonly's own source in this directory is MIT licensed. The bundled WireGuard
 programs retain their upstream licences; see `licenses/` and

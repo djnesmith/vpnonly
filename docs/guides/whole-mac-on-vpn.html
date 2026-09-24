@@ -18,7 +18,7 @@
 <meta name="twitter:description" content="What a VPN client actually changes on macOS, why every app follows it, and how to route only some of them.">
 <meta name="twitter:image" content="https://vpnonly.app/og.png">
 <link rel="icon" type="image/png" href="../icon.png">
-<link rel="stylesheet" href="../style.css?v=17">
+<link rel="stylesheet" href="../style.css?v=22">
 <script data-goatcounter="https://vpnonly.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "7c46f36f17e44f7693519b06b101987a"}'></script>
 </head>
@@ -59,7 +59,7 @@ default            192.168.1.1        UGScg    en0</code></pre>
 
 <h2>How to route only some apps</h2>
 <p>Two different models exist, and the difference matters:</p>
-<p><strong>Exclude from a full tunnel.</strong> Your Mac still joins the VPN, and specific apps are punched out of it. This is what "split tunneling" usually means in Windows VPN clients, and what SplitTunnel.app does on macOS.</p>
+<p><strong>Exclude from a full tunnel.</strong> Your Mac still joins the VPN, and specific apps are punched out of it. This is what "split tunneling" usually means in VPN apps, and how Surfshark, Mullvad and Proton do it on macOS.</p>
 <p><strong>Opt in from a normal connection.</strong> Your Mac never joins the VPN at all; individual apps are moved into a tunnel that nothing else uses. This is what <a href="../">VPNonly</a> does. The default route is never touched, so the worst case is one app losing connectivity rather than your whole machine.</p>
 <p>Which is better depends on your goal. If you want privacy by default and exceptions for convenience, exclude from a full tunnel. If your Mac is fine as it is and one app needs to be somewhere else, opt in.</p>
 

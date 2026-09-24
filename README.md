@@ -38,8 +38,9 @@ tunneled unless you ask for it.**
   ↑↓  |  Enter open  |  D disconnect  |  R refresh  |  Q quit
 ```
 
-Around 350 lines of shell and one small C file. No kernel extension, no
-Network Extension entitlement, and your default route is never touched.
+About a thousand lines of shell, a short Python config parser and one small C
+file. No kernel extension, no Network Extension entitlement, and your default
+route is never touched.
 
 ## Install
 
@@ -51,7 +52,7 @@ Homebrew pulls in WireGuard, compiles the small launcher, and puts `vpnonly` on
 your PATH. The `brew trust` step is Homebrew 6's confirmation for third-party
 taps, which seems fair for something that asks for root.
 
-Then set up a provider, once.
+Then set up NordVPN, once.
 
 **NordVPN.** There's no config file to download, so fetch a key. Generate an
 access token at
@@ -59,16 +60,17 @@ access token at
 then run `fetch-creds.sh` from the install directory
 (`$(brew --prefix)/opt/vpnonly/libexec/fetch-creds.sh`) and paste it in.
 
-**Anything else that speaks WireGuard** (Mullvad, Proton, IVPN, AirVPN, your
-own server): download a `.conf` from them. Nothing to copy by hand.
+**Other WireGuard providers: not yet.** The CLI runs the stock `wireguard-go`
+from Homebrew, which sends packets into the tunnel with your LAN address as the
+inner source. NordVPN's servers accept that; providers that enforce cryptokey
+routing (Mullvad, Proton, most self-hosted servers) silently drop it, so the
+tunnel comes up but nothing gets through. For now the CLI is NordVPN-only in
+practice. `up.sh` will still load another provider's `.conf` if you want to
+try yours.
 
-One honest caveat for the CLI: it runs the stock `wireguard-go` from Homebrew,
-which sends packets into the tunnel with your LAN address as the inner source.
-NordVPN's servers accept that; providers that enforce cryptokey routing
-(Mullvad, Proton, most self-hosted servers) silently drop it. The Mac app
-bundles a patched `wireguard-go` that rewrites the inner source, so those work
-there. The CLI catches up when the formula builds the same patch; until then
-the CLI is NordVPN-only in practice. Details under *How it works*.
+The Mac app bundles a patched `wireguard-go` that rewrites the inner source, so
+other providers work there. The CLI catches up when the formula builds the same
+patch. Details under *How it works*.
 
 ### Or from source
 
@@ -78,7 +80,7 @@ git clone https://github.com/kanishkdan/vpnonly && cd vpnonly
 ./fetch-creds.sh          # NordVPN only
 ```
 
-You need Xcode Command Line Tools either way, for `cc` to build the 30-line
+You need Xcode Command Line Tools either way, for `cc` to build the small
 launcher. macOS offers to install them the first time it's needed.
 
 ## Using it
@@ -108,7 +110,7 @@ Exit country: `echo us > ~/.config/vpnonly/country` (default `sg`).
 ```sh
 sudo ./up.sh                                  # NordVPN, Singapore by default
 sudo COUNTRY=us ./up.sh                       # or pick a country
-sudo ./up.sh ~/Downloads/mullvad-sg.conf      # or any provider's config
+sudo ./up.sh ~/Downloads/provider.conf        # or a .conf (see Install)
 
 sudo ./run.sh                                 # pick an app from a list
 sudo ./status.sh                              # what's routed, and both exit IPs
@@ -206,13 +208,15 @@ just that anchor and stops just the process it started.
 
 ## Limitations
 
+- **NordVPN only, for now.** Other providers need the patched `wireguard-go`;
+  see the caveat under *Install*. The Mac app works with any of them.
 - Apple Silicon and Intel both work here; the compiled launcher is built on
   your machine.
 - **Safari and other WebKit apps can't be routed.** WebKit hands its
   connections to separate system processes that macOS starts on its own, so
-  they never carry the group and PF has nothing to match. Proton VPN's macOS
-  split tunneling documents the same limitation. Chrome, Firefox, Arc and Brave
-  are fine.
+  they never carry the group and PF has nothing to match. Mullvad and Proton
+  VPN document the same limitation for their macOS split tunneling. Chrome,
+  Firefox, Arc and Brave are fine.
 - **DNS queries are not tunneled.** Apps resolve through mDNSResponder, which
   runs outside the group, so lookups still exit over your normal connection
   even though the connections themselves are tunneled. Two consequences. Your
@@ -239,8 +243,8 @@ sudo ./run.sh /usr/bin/curl -s https://api.ipify.org   # the VPN exit IP
 ## Roadmap
 
 The architecturally "right" version is a Network Extension
-(`NETransparentProxyProvider`) matching flows by signing identifier, which is
-how Mullvad's client does split tunneling on macOS. This repo is the
+(`NETransparentProxyProvider`) matching flows by the app that made them, which
+is how PIA's client does split tunneling on macOS. This repo is the
 zero-dependency, auditable version.
 
 ## Security notes
@@ -248,8 +252,9 @@ zero-dependency, auditable version.
 - Your WireGuard private key lives in `~/.config/vpnonly/` with mode 600 and
   never leaves the machine. Revoke the Nord access token after use; it's only
   needed once to fetch the key.
-- Everything that runs as root is in this repo and short enough to read in five
-  minutes: `up.sh`, `down.sh`, `run.sh`, `status.sh`, `vpnrun.c`.
+- Everything that runs as root is in this repo: `vpnonly` (it re-runs itself
+  with sudo), `up.sh`, `down.sh`, `run.sh`, `status.sh`, `parse-wg.py` (called
+  by `up.sh`) and `vpnrun.c`. `fetch-creds.sh` runs as you.
 
 ## The Mac app
 
@@ -262,7 +267,8 @@ automatic updates. It's $19 once for two Macs:
 The privileged engine it installs is published in
 [`app-engine/`](app-engine/) with a checksum manifest generated by the same
 command that builds each release, so you can read exactly what runs as root
-before trusting it. The scripts above are the same idea without the interface.
+before trusting it. The CLI above is the same idea, built separately and
+without the menu bar interface.
 
 ## Licence
 

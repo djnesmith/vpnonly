@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AzireVPN split tunneling on Mac</title>
+<meta name="description" content="Put one Mac app on AzireVPN, the rest on your normal connection, using a WireGuard config from your AzireVPN account.">
+<link rel="canonical" href="https://vpnonly.app/guides/azirevpn-split-tunneling-mac.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="VPNonly">
+<meta property="og:url" content="https://vpnonly.app/guides/azirevpn-split-tunneling-mac.html">
+<meta property="og:title" content="AzireVPN split tunneling on Mac">
+<meta property="og:description" content="Put one Mac app on AzireVPN, the rest on your normal connection, using a WireGuard config from your AzireVPN account.">
+<meta property="og:image" content="https://vpnonly.app/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@kanishkrazdan">
+<meta name="twitter:title" content="AzireVPN split tunneling on Mac">
+<meta name="twitter:description" content="Put one Mac app on AzireVPN, the rest on your normal connection, using a WireGuard config from your AzireVPN account.">
+<meta name="twitter:image" content="https://vpnonly.app/og.png">
+<link rel="icon" type="image/png" href="../icon.png">
+<link rel="stylesheet" href="../style.css?v=22">
+<script data-goatcounter="https://vpnonly.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "7c46f36f17e44f7693519b06b101987a"}'></script>
+</head>
+<body>
+<div class="shell">
+
+<div class="top">
+  <a class="me" href="../">
+    <svg viewBox="0 0 26 30"><path d="M13 1l11 4v9c0 7.5-4.8 13.6-11 15C6.8 27.6 2 21.5 2 14V5z" fill="none" stroke="#15161a" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 1l-11 4v9c0 7.5 4.8 13.6 11 15z" fill="#15161a"/></svg>
+    <b>VPNonly</b>
+  </a>
+  <a href="../how-it-works.html">how it works</a>
+  <a href="index.html">guides</a>
+  <a href="../faq.html">faq</a>
+  <a href="../install.html">install</a>
+  <a href="https://github.com/kanishkdan/vpnonly">github</a>
+</div>
+
+<div class="solo">
+<h1>AzireVPN split tunneling on Mac</h1>
+<p>AzireVPN has a Mac app, but it doesn't advertise per-app split tunneling on macOS: connect it and your whole Mac moves. AzireVPN also gives you standard WireGuard configs from your account, though, and those can put a single app on the VPN while everything else stays on your normal connection.</p>
+
+<h2>Get a WireGuard config from AzireVPN</h2>
+<ol>
+  <li>Sign in to AzireVPN's <a href="https://manager.azirevpn.com/wireguard">WireGuard config page</a>. You need a paid account; there's no free plan.</li>
+  <li>Choose the locations you want and download their configs. Each location is its own <code>.conf</code>.</li>
+</ol>
+
+<h2>Put one app on it with VPNonly</h2>
+<ol>
+  <li>Install <a href="../">VPNonly</a> and open the <strong>&ctdot;</strong> menu &rarr; <strong>Import WireGuard config…</strong>.</li>
+  <li>Choose the <code>.conf</code>, or select several (or the folder or zip they came in) at once. Pick the exit from the menu at the bottom.</li>
+  <li>Search for an app, flip its switch. It relaunches once, then it's on the VPN and nothing else is.</li>
+</ol>
+<p>An AzireVPN account covers 10 devices and 5 connections at a time, so one set of configs for VPNonly fits alongside your other devices. The configs carry both IPv4 and IPv6 addresses. VPNonly sends the app's IPv4 traffic through the tunnel and blocks its IPv6, so nothing leaks around it.</p>
+<p>Documented from AzireVPN's FAQ, API documentation and official command-line tool (September 2026). The config page sits behind a sign-in, so its exact labels may differ slightly. Standard WireGuard configs; not separately tested on our hardware.</p>
+<p style="margin-top:38px;"><a class="btn" href="https://dodo.pe/get-vpnonly">Get VPNonly for Mac — $19</a></p>
+<p style="font-size:15px;">The app’s <a href="https://github.com/kanishkdan/vpnonly/tree/main/app-engine">exact privileged engine source</a> is public and MIT licensed.</p>
+<h2>Other providers</h2>
+<p><a href="nordvpn-split-tunneling-mac.html">NordVPN</a> · <a href="mullvad-split-tunneling-mac.html">Mullvad</a> · <a href="protonvpn-split-tunneling-mac.html">Proton VPN</a> · <a href="surfshark-split-tunneling-mac.html">Surfshark</a> · <a href="ivpn-split-tunneling-mac.html">IVPN</a> · <a href="airvpn-split-tunneling-mac.html">AirVPN</a> · <a href="windscribe-split-tunneling-mac.html">Windscribe</a> · <a href="torguard-split-tunneling-mac.html">TorGuard</a> · <a href="ovpn-split-tunneling-mac.html">OVPN</a> · <a href="expressvpn-split-tunneling-mac.html">ExpressVPN</a> · <a href="mullvad-proton-split-tunneling-mac.html">your own server</a>. Or see <a href="mac-vpn-split-tunneling.html">which Mac VPNs have split tunneling</a>, provider by provider.</p><div class="foot">
+  <span>Made by <a href="https://x.com/kanishkrazdan">@kanishkrazdan</a></span>
+  <a href="index.html">guides</a>
+  <a href="../download.html">download</a>
+  <a href="https://customer.dodopayments.com/login/bus_0NlVlYzwOq7gzrk1tWl0u">your purchases</a>
+  <a href="../changelog.html">changelog</a>
+  <a href="../terms.html">terms &amp; privacy</a>
+</div>
+</div>
+
+</div>
+</body>
+</html>

@@ -18,7 +18,7 @@
 <meta name="twitter:description" content="How to route individual macOS apps through any WireGuard provider, using a config file you already have.">
 <meta name="twitter:image" content="https://vpnonly.app/og.png">
 <link rel="icon" type="image/png" href="../icon.png">
-<link rel="stylesheet" href="../style.css?v=17">
+<link rel="stylesheet" href="../style.css?v=22">
 <script data-goatcounter="https://vpnonly.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "7c46f36f17e44f7693519b06b101987a"}'></script>
 </head>
@@ -49,18 +49,23 @@
   <li><a href="protonvpn-split-tunneling-mac.html">Proton VPN</a></li>
   <li><a href="surfshark-split-tunneling-mac.html">Surfshark</a></li>
   <li><a href="ivpn-split-tunneling-mac.html">IVPN</a></li>
+  <li><a href="airvpn-split-tunneling-mac.html">AirVPN</a></li>
+  <li><a href="windscribe-split-tunneling-mac.html">Windscribe</a> &mdash; Pro or Build-A-Plan</li>
+  <li><a href="ovpn-split-tunneling-mac.html">OVPN</a> &mdash; every server in one zip</li>
+  <li><a href="azirevpn-split-tunneling-mac.html">AzireVPN</a></li>
+  <li><a href="torguard-split-tunneling-mac.html">TorGuard</a> &mdash; configs expire daily</li>
   <li><a href="expressvpn-split-tunneling-mac.html">ExpressVPN</a> &mdash; why it can't be used this way</li>
 </ul>
 
-<h2>AirVPN</h2>
-<p>AirVPN's <a href="https://airvpn.org/generator/">config generator</a> (sign in first) builds a WireGuard <code>.conf</code>. Its configs include a preshared key, which VPNonly handles without any extra step.</p>
+<h2 id="airvpn">AirVPN</h2>
+<p>AirVPN's <a href="https://airvpn.org/generator/">config generator</a> (sign in first) builds a WireGuard <code>.conf</code>. Its configs include a preshared key, which VPNonly handles without any extra step. <a href="airvpn-split-tunneling-mac.html">Full AirVPN walkthrough →</a></p>
 
-<h2>Your own WireGuard server</h2>
+<h2 id="own-server">Your own WireGuard server</h2>
 <p>A VPS with WireGuard costs a few dollars a month and gives you an exit IP nobody else shares. Use the client config you generated when you set the server up.</p>
 
-<h2>Importing a config</h2>
+<h2 id="importing">Importing a config</h2>
 <p>In <a href="../">VPNonly</a>: open the <strong>⋯</strong> menu, choose <strong>Import WireGuard config…</strong>, and pick either a single <code>.conf</code> or the zip Mullvad gives you. The zip becomes one entry &mdash; pick a country from the menu at the bottom, the same way you would with NordVPN. Then flip the switch next to any app.</p>
-<p>The exact privileged engine used by the app is public for inspection. The historical command-line prototype is retained on GitHub for reference, but it is not the current app engine.</p>
+<p>The exact privileged engine used by the app is public for inspection. The free command-line version on GitHub is a separate, smaller implementation that works with NordVPN only for now, so for the providers on this page, use the app.</p>
 
 <h2>Two details worth knowing</h2>
 <p>Providers hand out <em>wg-quick</em> configs, which include <code>Address</code>, <code>DNS</code> and sometimes <code>MTU</code> lines. Plain <code>wg setconf</code> rejects those, so anything importing them has to strip them out and apply the address separately. If you're scripting this yourself, that's the first thing to get right.</p>

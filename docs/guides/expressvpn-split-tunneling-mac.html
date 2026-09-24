@@ -18,7 +18,7 @@
 <meta name="twitter:description" content="ExpressVPN's own app does split tunneling, but it can't be used with a WireGuard per-app tool. Here's why, and what to do.">
 <meta name="twitter:image" content="https://vpnonly.app/og.png">
 <link rel="icon" type="image/png" href="../icon.png">
-<link rel="stylesheet" href="../style.css?v=17">
+<link rel="stylesheet" href="../style.css?v=22">
 <script data-goatcounter="https://vpnonly.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "7c46f36f17e44f7693519b06b101987a"}'></script>
 </head>
@@ -40,17 +40,17 @@
 <div class="solo">
 <h1>ExpressVPN split tunneling on Mac</h1>
 <p>Two things are true and they pull in opposite directions.</p>
-<p><strong>ExpressVPN's own Mac app has split tunneling.</strong> You can pick which apps use the VPN and which don't, in their client. If you're happy in the ExpressVPN app, you already have this.</p>
-<p><strong>But you can't use ExpressVPN with a WireGuard-based per-app tool like VPNonly.</strong> ExpressVPN runs on its own protocol, Lightway, and doesn't hand out WireGuard config files. There's nothing to import. Tools that route by WireGuard need a config, and ExpressVPN doesn't provide one.</p>
+<p><strong>ExpressVPN's own Mac app has split tunneling</strong>, in the version from their website (the App Store version doesn't). You set each app, IP or subnet to <em>Only VPN</em> or <em>Bypass VPN</em>, and choose what happens to all other apps, so it works both ways. If you're happy in the ExpressVPN app, you already have this.</p>
+<p><strong>But you can't use ExpressVPN with a WireGuard-based per-app tool like VPNonly.</strong> ExpressVPN's apps default to its own protocol, Lightway, and although they now offer WireGuard too, ExpressVPN doesn't hand out WireGuard config files. There's nothing to import. Tools that route by WireGuard need a config, and ExpressVPN doesn't provide one.</p>
 
 <h2>So what are the options</h2>
 <ul>
-  <li><strong>Stay in the ExpressVPN app</strong> and use its built-in split tunneling. It's the exclude model — the Mac is on the VPN, you leave some apps out.</li>
-  <li><strong>Want apps to opt in instead</strong> — nothing on the VPN until you add one app — use a provider that issues WireGuard configs. <a href="mullvad-split-tunneling-mac.html">Mullvad</a>, <a href="protonvpn-split-tunneling-mac.html">Proton</a>, <a href="ivpn-split-tunneling-mac.html">IVPN</a> and <a href="nordvpn-split-tunneling-mac.html">NordVPN</a> all do, and VPNonly works with any of them.</li>
+  <li><strong>Stay in the ExpressVPN app</strong> and use its built-in split tunneling. For opt-in, set all other apps to bypass the VPN and mark the ones you want as <em>Only VPN</em>. You'll need the website version and to allow its split-tunnel network extension.</li>
+  <li><strong>Want per-app routing that isn't tied to one provider</strong> — so you can switch, or use two — use a provider that issues WireGuard configs. <a href="mullvad-split-tunneling-mac.html">Mullvad</a>, <a href="protonvpn-split-tunneling-mac.html">Proton</a>, <a href="ivpn-split-tunneling-mac.html">IVPN</a> and <a href="nordvpn-split-tunneling-mac.html">NordVPN</a> all do, and VPNonly works with any of them.</li>
 </ul>
-<p>This isn't a knock on ExpressVPN; Lightway is a reasonable protocol. It just isn't interoperable the way WireGuard is.</p>
+<p>This isn't a knock on ExpressVPN. Its WireGuard support just lives inside its own apps, not in a file you can take elsewhere.</p>
 <h2>Other providers</h2>
-<p><a href="nordvpn-split-tunneling-mac.html">NordVPN</a> · <a href="mullvad-split-tunneling-mac.html">Mullvad</a> · <a href="protonvpn-split-tunneling-mac.html">Proton VPN</a> · <a href="surfshark-split-tunneling-mac.html">Surfshark</a> · <a href="ivpn-split-tunneling-mac.html">IVPN</a> · <a href="mullvad-proton-split-tunneling-mac.html">AirVPN or your own server</a>. Or see <a href="mac-vpn-split-tunneling.html">which Mac VPNs have split tunneling</a>, provider by provider.</p><div class="foot">
+<p><a href="nordvpn-split-tunneling-mac.html">NordVPN</a> · <a href="mullvad-split-tunneling-mac.html">Mullvad</a> · <a href="protonvpn-split-tunneling-mac.html">Proton VPN</a> · <a href="surfshark-split-tunneling-mac.html">Surfshark</a> · <a href="ivpn-split-tunneling-mac.html">IVPN</a> · <a href="airvpn-split-tunneling-mac.html">AirVPN</a> · <a href="windscribe-split-tunneling-mac.html">Windscribe</a> · <a href="torguard-split-tunneling-mac.html">TorGuard</a> · <a href="azirevpn-split-tunneling-mac.html">AzireVPN</a> · <a href="ovpn-split-tunneling-mac.html">OVPN</a> · <a href="mullvad-proton-split-tunneling-mac.html">your own server</a>. Or see <a href="mac-vpn-split-tunneling.html">which Mac VPNs have split tunneling</a>, provider by provider.</p><div class="foot">
   <span>Made by <a href="https://x.com/kanishkrazdan">@kanishkrazdan</a></span>
   <a href="index.html">guides</a>
   <a href="../download.html">download</a>
