@@ -39,13 +39,14 @@
 
 <div class="solo">
 <h1>Surfshark split tunneling on Mac</h1>
-<p>Surfshark's macOS app has split tunneling built in, called <strong>Bypasser</strong>. It's <em>exclude-only</em> — your Mac is on the VPN and you list apps and sites to leave out — and it isn't available on Big Sur. If that model fits, it's included with your plan.</p>
+<p>Surfshark's macOS app has split tunneling built in, called <strong>Bypasser</strong>. On macOS it's <em>exclude-only</em> — your Mac is on the VPN and you list apps, sites and IPs to leave out — and it needs macOS 12 or later plus a system extension you approve. If that model fits, it's included with your plan.</p>
 <p>If you want apps to <em>opt in</em> instead, Surfshark also publishes manual WireGuard credentials you can use with a per-app tool.</p>
 
 <h2>Get a WireGuard config from Surfshark</h2>
 <ol>
-  <li>Sign in to your Surfshark account and open <strong>VPN &rarr; Manual setup &rarr; WireGuard</strong>.</li>
-  <li>Generate a key pair, choose a location, and download the <code>.conf</code>.</li>
+  <li>Sign in to your Surfshark account and open <strong>VPN &rarr; Manual setup &rarr; Desktop or mobile &rarr; WireGuard</strong>.</li>
+  <li>Choose <strong>I don't have a key pair</strong>, name it, and generate a new key pair. Surfshark won't show it again, so keep the file you download.</li>
+  <li>Choose a location and download the <code>.conf</code>.</li>
 </ol>
 <h2>Put one app on it with VPNonly</h2>
 <ol>
