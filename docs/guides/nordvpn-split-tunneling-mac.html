@@ -52,7 +52,7 @@
 <p><strong>VPNonly</strong> does this in one step: generate an access token at <a href="https://my.nordaccount.com/dashboard/nordvpn/manual-configuration/">my.nordaccount.com → Manual configuration → Access token</a>, paste it in once, and it fetches your key and picks servers for you. Then you flip a switch next to any app.</p>
 
 <h3>Inspect how it works</h3>
-<p>VPNonly's <a href="https://github.com/kanishkdan/vpnonly/tree/main/app-engine">current privileged engine source</a> is public. The repository's root-level command-line scripts are a historical prototype, not the engine shipped in the app; they assume a fixed tunnel interface and replace PF's main ruleset, so they are not recommended on a current Mac.</p>
+<p>VPNonly's <a href="https://github.com/kanishkdan/vpnonly/tree/main/app-engine">current privileged engine source</a> is public. If you'd rather stay in the terminal, the same repository has a free command-line version you can install with Homebrew, and it works with NordVPN.</p>
 
 <h3>Or keep a VPN app and steer apps around it</h3>
 <p>SplitTunnel.app runs alongside a VPN client you already use and sets each app to VPN, direct or blocked. It says it works with any VPN, though its guides focus on corporate ones and don't mention Nord. Subscription pricing.</p>
