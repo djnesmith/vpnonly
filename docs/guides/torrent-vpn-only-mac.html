@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Torrents through a VPN on Mac, and nothing else</title>
+<meta name="description" content="Put qBittorrent or Transmission on a VPN with a kill switch while the rest of your Mac stays on its normal connection. How to set it up, and what to know about DNS, IPv6 and port forwarding.">
+<link rel="canonical" href="https://vpnonly.app/guides/torrent-vpn-only-mac.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="VPNonly">
+<meta property="og:url" content="https://vpnonly.app/guides/torrent-vpn-only-mac.html">
+<meta property="og:title" content="Torrents through a VPN on Mac, and nothing else">
+<meta property="og:description" content="Put qBittorrent or Transmission on a VPN with a kill switch while the rest of your Mac stays on its normal connection.">
+<meta property="og:image" content="https://vpnonly.app/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@kanishkrazdan">
+<meta name="twitter:title" content="Torrents through a VPN on Mac, and nothing else">
+<meta name="twitter:description" content="Put qBittorrent or Transmission on a VPN with a kill switch while the rest of your Mac stays on its normal connection.">
+<meta name="twitter:image" content="https://vpnonly.app/og.png">
+<link rel="icon" type="image/png" href="../icon.png">
+<link rel="stylesheet" href="../site.css">
+<script>
+  // Count visits on the real site only, never on a local preview.
+  if (location.hostname === "vpnonly.app") {
+    const gc = document.createElement("script");
+    gc.async = true;
+    gc.src = "//gc.zgo.at/count.js";
+    gc.dataset.goatcounter = "https://vpnonly.goatcounter.com/count";
+    document.head.appendChild(gc);
+    const cf = document.createElement("script");
+    cf.defer = true;
+    cf.src = "https://static.cloudflareinsights.com/beacon.min.js";
+    cf.dataset.cfBeacon = '{"token": "7c46f36f17e44f7693519b06b101987a"}';
+    document.head.appendChild(cf);
+  }
+</script>
+</head>
+<body>
+<div class="shell">
+
+<header class="wrap nav">
+  <a class="brand" href="../">
+    <svg viewBox="0 0 26 30" aria-hidden="true"><path d="M13 1l11 4v9c0 7.5-4.8 13.6-11 15C6.8 27.6 2 21.5 2 14V5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 1l-11 4v9c0 7.5 4.8 13.6 11 15z" fill="currentColor"/></svg>
+    VPNonly
+  </a>
+  <nav aria-label="Site">
+    <a href="../how-it-works.html">How it works</a>
+    <a href="./" aria-current="page">Guides</a>
+    <a href="../faq.html">FAQ</a>
+    <a href="../install.html">Install</a>
+    <a href="https://github.com/kanishkdan/vpnonly">GitHub</a>
+  </nav>
+  <a class="nav-buy" href="https://dodo.pe/get-vpnonly" data-goatcounter-click="buy-nav-torrent-vpn-only-mac">Buy · $19</a>
+</header>
+
+<div class="solo">
+<p class="crumb"><a href="./">Guides</a></p>
+<h1>Torrents through the VPN on a Mac, and nothing else</h1>
+
+<p>The usual advice is to connect your VPN before you open qBittorrent. It works, but your whole Mac goes through the VPN with it: video calls get worse, your bank sees a foreign address and starts asking questions, and every other download runs at whatever speed the VPN server manages that day.</p>
+
+<p>It can also fail the wrong way. If the VPN drops and its app has no kill switch turned on, the torrent client carries on over your normal connection, unless you've bound it to the VPN's network interface yourself.</p>
+
+<p>VPNonly does it the other way round. Your Mac stays on its normal connection, and only the torrent app goes through the VPN.</p>
+
+<h2>What you need</h2>
+<ul>
+  <li>A Mac with Apple silicon.</li>
+  <li>A VPN account that speaks WireGuard. NordVPN works with just an access token; Mullvad, Proton, IVPN, AirVPN or your own server work with the config file they give you. <a href="mullvad-proton-split-tunneling-mac.html">Details per provider.</a></li>
+  <li>A torrent app that runs as a normal Mac app, like qBittorrent or Transmission.</li>
+</ul>
+
+<h2>Setting it up</h2>
+<ol>
+  <li>Install VPNonly and connect your provider. Pick a server.</li>
+  <li>Find your torrent app in the list and switch it on. It closes and reopens once. That's macOS, not a bug: an app's network identity is fixed the moment it opens.</li>
+  <li>Click Check. VPNonly asks the internet which address the app is really using and shows it next to your Mac's own. The two should differ.</li>
+</ol>
+<p>Nothing else on the Mac changes. Your browser, your calls and every other app keep using your normal connection.</p>
+
+<h2>When the tunnel drops</h2>
+<p>The torrent app is blocked until the tunnel is back. It never quietly falls back to your normal connection, so there's no interface to bind and no separate kill switch to remember. VPNonly reconnects the tunnel on its own after a network change, and the torrent app picks its peers back up by itself.</p>
+
+<h2>Worth knowing</h2>
+<ul>
+  <li><strong>IPv6.</strong> Apps on the VPN can't use IPv6 while they're switched on, so the torrent app talks to peers over IPv4 only. It also means nothing leaks out over IPv6.</li>
+  <li><strong>DNS.</strong> Connections are tunneled, but DNS lookups still go through your normal resolver. Your ISP can see which tracker names the app looks up, though not the traffic itself.</li>
+  <li><strong>Port forwarding.</strong> VPNonly doesn't set up port forwarding. Without a forwarded port, other peers can't start connections to you. Downloading works normally; seeding tends to be slower.</li>
+  <li><strong>Switching.</strong> Moving the app in or out of the VPN drops its open connections. It reconnects to peers on its own, so it's fine to do mid-download.</li>
+</ul>
+
+<h2>On the rules</h2>
+<p>A VPN changes the address other peers see. It doesn't change what's legal to download where you live. This page describes what the software does; what you use it for is your call.</p>
+
+<p class="cta"><a class="btn" href="https://dodo.pe/get-vpnonly" data-goatcounter-click="buy-torrent-vpn-only-mac">Get VPNonly for Mac — $19</a></p>
+<p class="note">The app’s <a href="https://github.com/kanishkdan/vpnonly/tree/main/app-engine">exact privileged engine source</a> is public and MIT licensed.</p>
+
+</div>
+
+</div>
+<footer class="wrap foot">
+  <span class="me">Made by <a href="https://x.com/kanishkrazdan">Kanishk</a></span>
+  <a href="./">Guides</a>
+  <a href="../download.html">Download</a>
+  <a href="https://customer.dodopayments.com/login/bus_0NlVlYzwOq7gzrk1tWl0u">Your purchases</a>
+  <a href="../changelog.html">Changelog</a>
+  <a href="../terms.html">Terms &amp; privacy</a>
+</footer>
+</body>
+</html>

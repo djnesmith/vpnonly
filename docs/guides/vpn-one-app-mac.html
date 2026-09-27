@@ -18,26 +18,43 @@
 <meta name="twitter:description" content="Three ways to route a single app through a VPN on macOS: per-app VPN tools, a virtual machine, or doing it yourself with PF and WireGuard.">
 <meta name="twitter:image" content="https://vpnonly.app/og.png">
 <link rel="icon" type="image/png" href="../icon.png">
-<link rel="stylesheet" href="../style.css?v=22">
-<script data-goatcounter="https://vpnonly.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "7c46f36f17e44f7693519b06b101987a"}'></script>
+<link rel="stylesheet" href="../site.css">
+<script>
+  // Count visits on the real site only, never on a local preview.
+  if (location.hostname === "vpnonly.app") {
+    const gc = document.createElement("script");
+    gc.async = true;
+    gc.src = "//gc.zgo.at/count.js";
+    gc.dataset.goatcounter = "https://vpnonly.goatcounter.com/count";
+    document.head.appendChild(gc);
+    const cf = document.createElement("script");
+    cf.defer = true;
+    cf.src = "https://static.cloudflareinsights.com/beacon.min.js";
+    cf.dataset.cfBeacon = '{"token": "7c46f36f17e44f7693519b06b101987a"}';
+    document.head.appendChild(cf);
+  }
+</script>
 </head>
 <body>
 <div class="shell">
 
-<div class="top">
-  <a class="me" href="../">
-    <svg viewBox="0 0 26 30"><path d="M13 1l11 4v9c0 7.5-4.8 13.6-11 15C6.8 27.6 2 21.5 2 14V5z" fill="none" stroke="#15161a" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 1l-11 4v9c0 7.5 4.8 13.6 11 15z" fill="#15161a"/></svg>
-    <b>VPNonly</b>
+<header class="wrap nav">
+  <a class="brand" href="../">
+    <svg viewBox="0 0 26 30" aria-hidden="true"><path d="M13 1l11 4v9c0 7.5-4.8 13.6-11 15C6.8 27.6 2 21.5 2 14V5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 1l-11 4v9c0 7.5 4.8 13.6 11 15z" fill="currentColor"/></svg>
+    VPNonly
   </a>
-  <a href="../how-it-works.html">how it works</a>
-  <a class="here" href="../guides/">guides</a>
-  <a href="../faq.html">faq</a>
-  <a href="../install.html">install</a>
-  <a href="https://github.com/kanishkdan/vpnonly">github</a>
-</div>
+  <nav aria-label="Site">
+    <a href="../how-it-works.html">How it works</a>
+    <a href="./" aria-current="page">Guides</a>
+    <a href="../faq.html">FAQ</a>
+    <a href="../install.html">Install</a>
+    <a href="https://github.com/kanishkdan/vpnonly">GitHub</a>
+  </nav>
+  <a class="nav-buy" href="https://dodo.pe/get-vpnonly" data-goatcounter-click="buy-nav-vpn-one-app-mac">Buy · $19</a>
+</header>
 
 <div class="solo">
+<p class="crumb"><a href="./">Guides</a></p>
 <h1>How to use a VPN for only one app on Mac</h1>
 
 <p>macOS has no built-in way to send one app through a VPN while everything else uses your normal connection. When you connect a VPN app, it replaces your default route, and every process on the machine follows it: your browser, your video calls, your backups, your bank.</p>
@@ -67,19 +84,19 @@
 <h2>One thing to know either way</h2>
 <p>Moving an app onto a VPN changes its exit IP, not its DNS by default. With VPNonly, connections are tunneled but DNS lookups still go through your system resolver. If your goal is a different exit IP, that's fine. If your goal is hiding which sites you visit from your ISP, you need a tool built for that.</p>
 
-<p style="margin-top:38px;"><a class="btn" href="https://dodo.pe/get-vpnonly">Get VPNonly for Mac — $19</a></p>
-<p style="font-size:15px;">The app’s <a href="https://github.com/kanishkdan/vpnonly/tree/main/app-engine">exact privileged engine source</a> is public and MIT licensed.</p>
+<p class="cta"><a class="btn" href="https://dodo.pe/get-vpnonly" data-goatcounter-click="buy-vpn-one-app-mac">Get VPNonly for Mac — $19</a></p>
+<p class="note">The app’s <a href="https://github.com/kanishkdan/vpnonly/tree/main/app-engine">exact privileged engine source</a> is public and MIT licensed.</p>
 
-<div class="foot">
-  <span>Made by <a href="https://x.com/kanishkrazdan">@kanishkrazdan</a></span>
-  <a href="index.html">guides</a>
-  <a href="../download.html">download</a>
-  <a href="https://customer.dodopayments.com/login/bus_0NlVlYzwOq7gzrk1tWl0u">your purchases</a>
-  <a href="../changelog.html">changelog</a>
-  <a href="../terms.html">terms &amp; privacy</a>
-</div>
 </div>
 
 </div>
+<footer class="wrap foot">
+  <span class="me">Made by <a href="https://x.com/kanishkrazdan">Kanishk</a></span>
+  <a href="./">Guides</a>
+  <a href="../download.html">Download</a>
+  <a href="https://customer.dodopayments.com/login/bus_0NlVlYzwOq7gzrk1tWl0u">Your purchases</a>
+  <a href="../changelog.html">Changelog</a>
+  <a href="../terms.html">Terms &amp; privacy</a>
+</footer>
 </body>
 </html>
