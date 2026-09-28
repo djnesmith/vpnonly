@@ -38,6 +38,10 @@
     document.head.appendChild(cf);
   }
 </script>
+<script type="speculationrules">
+{"prefetch": [{"where": {"and": [{"href_matches": "/*"}, {"not": {"href_matches": "/*.zip"}}]}, "eagerness": "moderate"}]}
+</script>
+<script src="site.js" defer></script>
 </head>
 <body>
 <div class="shell">
