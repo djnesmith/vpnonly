@@ -1,5 +1,5 @@
 {
-  "version": "1.9.19",
+  "version": "1.9.20",
   "url": "https://vpnonly.app/",
-  "notes": "Your apps stay pinned at the top, servers can be picked straight from the VPN menu, dialogs open above the popup, the menu bar icon can show status in colour, and apps behind aliases appear once."
+  "notes": "Check tests every app on the VPN, and the popup is more compact."
 }
