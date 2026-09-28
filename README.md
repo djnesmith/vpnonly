@@ -95,9 +95,10 @@ vpnonly all        # hand the whole Mac back to the NordVPN app
 
 It asks for your password, because the tunnel and firewall rules need root.
 
-The picker lists apps that are running now. macOS fixes a process's group
-when it starts, so every app you tick or untick is quit and reopened. The
-tunnel comes up on the first tick. Docker, Safari, the NordVPN app and the
+The picker lists apps that are running now; press `r` to rescan after
+opening or quitting one. macOS fixes a process's group when it starts, so
+every app you tick or untick is quit and reopened. The tunnel comes up on
+the first tick. Docker, Safari, the NordVPN app and the
 terminal you run it from are left out of the list. If the NordVPN app is
 open, `vpnonly` offers to quit it first: the two tunnels can't share the Mac.
 

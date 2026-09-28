@@ -216,11 +216,36 @@ ensure_nord_quit() {
 
 # --- picker ------------------------------------------------------------------
 
-# Checkbox list over ITEMS; CHECKED holds 0/1 per item. Space toggles, Enter
-# applies, q cancels. No fzf: it cannot preselect rows, and the routed apps
-# have to start ticked. Returns 1 on cancel.
+# Fill ROUTED, ITEMS and CHECKED from what is running now. A row the user
+# changed keeps its tick; every other row shows whether the app is routed now,
+# so routing changed elsewhere mid-pick never turns into a quit and reopen.
+load_items() {
+    local app i was on=() off=()
+    for i in ${ITEMS[@]+"${!ITEMS[@]}"}; do
+        was=0; in_list "${ITEMS[$i]}" ${ROUTED[@]+"${ROUTED[@]}"} && was=1
+        [ "${CHECKED[$i]}" = "$was" ] && continue
+        if [ "$was" = 1 ]; then off+=("${ITEMS[$i]}"); else on+=("${ITEMS[$i]}"); fi
+    done
+    ROUTED=(); ITEMS=(); CHECKED=()
+    IFS=$'\n' read -r -d '' -a ROUTED < <(routed_apps && printf '\0') || true
+    while IFS= read -r app; do
+        [ -n "$app" ] || continue
+        cannot_route "$app" && ! in_list "$app" ${ROUTED[@]+"${ROUTED[@]}"} && continue
+        ITEMS+=("$app")
+        if in_list "$app" ${on[@]+"${on[@]}"}; then CHECKED+=(1)
+        elif in_list "$app" ${off[@]+"${off[@]}"}; then CHECKED+=(0)
+        elif in_list "$app" ${ROUTED[@]+"${ROUTED[@]}"}; then CHECKED+=(1)
+        else CHECKED+=(0)
+        fi
+    done < <({ running_apps; routed_apps; } | sort -u |
+             awk -F/ '{ print $NF "\t" $0 }' | sort -f | cut -f2-)
+}
+
+# Checkbox list over ITEMS; CHECKED holds 0/1 per item. Space toggles, r
+# rescans the running apps, Enter applies, q cancels. No fzf: it cannot
+# preselect rows, and the routed apps have to start ticked. Returns 1 on cancel.
 picker() {
-    local sel=0 top=0 rows view i mark name key rest scrolls below
+    local sel=0 top=0 rows view i mark name key rest scrolls below cur
     restore() { printf '\e[?25h\e[?1049l'; }
     trap 'restore; exit 130' INT
     printf '\e[?1049h\e[?25l'
@@ -230,6 +255,8 @@ picker() {
         view=$((rows - 9)); [ "${#ITEMS[@]}" -gt "$view" ] && view=$((rows - 11))
         [ "$view" -lt 3 ] && view=3
         [ "${#ITEMS[@]}" -lt "$view" ] && view=${#ITEMS[@]}
+        # A refresh can shorten the list under the window.
+        [ "$top" -gt $((${#ITEMS[@]} - view)) ] && top=$((${#ITEMS[@]} - view))
         [ "$sel" -lt "$top" ] && top=$sel
         [ "$sel" -ge $((top + view)) ] && top=$((sel - view + 1))
         printf '\e[H\e[J'
@@ -254,13 +281,14 @@ picker() {
             fi
             i=$((i + 1))
         done
+        [ "${#ITEMS[@]}" -gt 0 ] || printf '  \e[2mno running apps\e[0m\n'
         if [ "$scrolls" = 1 ]; then
             below=$((${#ITEMS[@]} - top - view))
             if [ "$below" -gt 0 ]; then printf '  \e[2m↓ %d more\e[0m\n' "$below"; else echo; fi
         fi
         printf '\n  \e[2mmacOS fixes an app'"'"'s network at launch, so every app you change\n'
         printf '  is quit and reopened. Save your work first.\e[0m\n'
-        printf '\n  \e[2m↑↓ move · space tick · enter apply · q cancel\e[0m'
+        printf '\n  \e[2m↑↓ move · space tick · r refresh · enter apply · q cancel\e[0m'
 
         IFS= read -rsn1 key </dev/tty || { restore; return 1; }
         case "$key" in
@@ -274,7 +302,16 @@ picker() {
                 esac ;;
             k) [ "$sel" -gt 0 ] && sel=$((sel - 1)) ;;
             j) [ "$sel" -lt $((${#ITEMS[@]} - 1)) ] && sel=$((sel + 1)) ;;
-            " ") if [ "${CHECKED[$sel]}" = 1 ]; then CHECKED[$sel]=0; else CHECKED[$sel]=1; fi ;;
+            " ") [ "${#ITEMS[@]}" -gt 0 ] || continue
+                 if [ "${CHECKED[$sel]}" = 1 ]; then CHECKED[$sel]=0; else CHECKED[$sel]=1; fi ;;
+            r|R)
+                cur=${ITEMS[$sel]:-}
+                load_items
+                [ "$sel" -lt "${#ITEMS[@]}" ] || sel=$((${#ITEMS[@]} - 1))
+                [ "$sel" -ge 0 ] || sel=0
+                for i in ${ITEMS[@]+"${!ITEMS[@]}"}; do
+                    [ "${ITEMS[$i]}" = "$cur" ] && { sel=$i; break; }
+                done ;;
             q|Q) restore; trap - INT; return 1 ;;
             "") restore; trap - INT; return 0 ;;
         esac
@@ -289,14 +326,7 @@ cmd_pick() {
 
     local app i
     ROUTED=(); ITEMS=(); CHECKED=()
-    IFS=$'\n' read -r -d '' -a ROUTED < <(routed_apps && printf '\0') || true
-    while IFS= read -r app; do
-        [ -n "$app" ] || continue
-        cannot_route "$app" && ! in_list "$app" ${ROUTED[@]+"${ROUTED[@]}"} && continue
-        ITEMS+=("$app")
-        if in_list "$app" ${ROUTED[@]+"${ROUTED[@]}"}; then CHECKED+=(1); else CHECKED+=(0); fi
-    done < <({ running_apps; routed_apps; } | sort -u |
-             awk -F/ '{ print $NF "\t" $0 }' | sort -f | cut -f2-)
+    load_items
     [ "${#ITEMS[@]}" -gt 0 ] || { echo "no running apps found in /Applications"; return 1; }
 
     picker || { echo "nothing changed"; return 0; }
