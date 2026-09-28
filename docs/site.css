@@ -230,6 +230,44 @@ figure.demo figcaption { margin-top: 10px; font-size: 15px; color: var(--muted);
 
 .ownerbar { background: var(--soft); border-radius: 10px; padding: 14px 16px; font-size: 16px !important; }
 
+/* changelog: a timeline, newest at the top. release.sh inserts plain
+   h2 + ul entries after the RELEASES marker, so all of this is styling. */
+.releases { position: relative; margin-top: 40px; padding-left: 34px; }
+.releases::before {
+  content: ""; position: absolute; left: 7px; top: 14px; bottom: 8px; width: 2px;
+  border-radius: 2px; background: var(--line);
+}
+.solo .releases h2 {
+  position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px;
+  margin: 56px 0 14px; font-size: 26px; letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+}
+.solo .releases h2:first-of-type { margin-top: 0; }
+.releases h2::before {
+  content: ""; position: absolute; left: -34px; top: .38em; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--bg); border: 2px solid var(--underline);
+}
+.releases h2:first-of-type::before {
+  background: var(--mac-green); border-color: var(--mac-green);
+  box-shadow: 0 0 0 5px rgba(40, 205, 65, .16);
+}
+.releases h2:first-of-type::after {
+  content: "Latest"; order: 1; align-self: center; padding: 2px 8px; border-radius: 99px;
+  border: 1px solid var(--new-line); color: var(--new-ink);
+  font-size: 12.5px; font-weight: 650; letter-spacing: 0;
+}
+.solo .releases h2 > span[style] { order: 2; }
+.releases h2 + p { margin-bottom: 12px; color: var(--ink); }
+.releases ul { padding-left: 20px; }
+.releases li { font-size: 17px !important; }
+.releases p { font-size: 17px !important; }
+.releases li b { color: var(--ink); }
+@media (max-width: 720px) {
+  .releases { padding-left: 26px; }
+  .releases::before { left: 5px; }
+  .releases h2::before { left: -26px; width: 14px; height: 14px; }
+  .solo .releases h2 { margin-top: 44px; font-size: 23px; }
+}
+
 /* the guides page: every guide newest first, each with its icon and date */
 .index { display: grid; margin-top: 16px; }
 .entry {
