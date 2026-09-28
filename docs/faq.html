@@ -82,6 +82,12 @@
 <p>Chrome, Firefox, Arc, Brave, CapCut, Slack, Discord and ordinary apps all work. If you need a browser on the VPN, use one of those.</p>
 <p>The list shows everything in Applications, including apps that install into a folder of their own there (Adobe&rsquo;s, for example), Utilities, and your own <code>~/Applications</code>. For anything else, use &ldquo;Choose another app&hellip;&rdquo; at the bottom of the list. One honest limit: an app whose real network work happens in background services that macOS starts on its own isn't covered by switching the app on, because those services aren't started by the app. Adobe's Creative Cloud downloads and sync are the clear example: Photoshop, Illustrator and the other suite apps can be switched on, but anything they hand to Creative Cloud's background services stays on your normal connection.</p>
 </details>
+<details class="qsec" open>
+<summary><h2>Does it work with AdGuard or Little Snitch?</h2></summary>
+<p>Little Snitch, yes. It decides whether each connection is allowed, but the app still makes the connection itself, so VPNonly's rules still see it.</p>
+<p><strong>AdGuard for Mac</strong> doesn't mix with it. To filter an app, AdGuard takes over that app's connections and makes them again from its own process. Those connections don't come from the app any more, so they skip the VPN and use your normal connection, even though the app is switched on. Other filters that re-send traffic this way have the same effect.</p>
+<p>The fix is to tell AdGuard to leave the app alone: its settings let you exclude an app from filtering, under Network. If it's a browser, use an ad-blocking extension inside the browser instead. Then check it: click <strong>Check</strong> in the popup, and open a what's-my-IP page such as <a href="https://ipinfo.io/">ipinfo.io</a> in the app itself. Both should show the VPN's address. If the popup passes but the page doesn't, something on the Mac is still re-sending the app's traffic.</p>
+</details>
 
 <details class="qsec" open>
 <summary><h2>Do I need my VPN's own app running?</h2></summary>
