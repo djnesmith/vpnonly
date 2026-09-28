@@ -220,13 +220,15 @@ ensure_nord_quit() {
 # applies, q cancels. No fzf: it cannot preselect rows, and the routed apps
 # have to start ticked. Returns 1 on cancel.
 picker() {
-    local sel=0 top=0 rows view i mark name key rest
+    local sel=0 top=0 rows view i mark name key rest scrolls below
     restore() { printf '\e[?25h\e[?1049l'; }
     trap 'restore; exit 130' INT
     printf '\e[?1049h\e[?25l'
     while :; do
         rows=$(tput lines 2>/dev/null || echo 24)
-        view=$((rows - 9)); [ "$view" -lt 3 ] && view=3
+        # 9 rows of chrome, plus 2 for the "more" hints when the list scrolls.
+        view=$((rows - 9)); [ "${#ITEMS[@]}" -gt "$view" ] && view=$((rows - 11))
+        [ "$view" -lt 3 ] && view=3
         [ "${#ITEMS[@]}" -lt "$view" ] && view=${#ITEMS[@]}
         [ "$sel" -lt "$top" ] && top=$sel
         [ "$sel" -ge $((top + view)) ] && top=$((sel - view + 1))
@@ -236,6 +238,10 @@ picker() {
             printf '  \e[2mtunnel up on %s · %s\e[0m\n\n' "$(tunnel_if)" "$(cat "$CONF/tunnel-server" 2>/dev/null || echo '?')"
         else
             printf '  \e[2mtunnel down · it comes up when you apply\e[0m\n\n'
+        fi
+        scrolls=0; [ "${#ITEMS[@]}" -gt "$view" ] && scrolls=1
+        if [ "$scrolls" = 1 ]; then
+            if [ "$top" -gt 0 ]; then printf '  \e[2m↑ %d more\e[0m\n' "$top"; else echo; fi
         fi
         i=$top
         while [ "$i" -lt $((top + view)) ] && [ "$i" -lt "${#ITEMS[@]}" ]; do
@@ -248,6 +254,10 @@ picker() {
             fi
             i=$((i + 1))
         done
+        if [ "$scrolls" = 1 ]; then
+            below=$((${#ITEMS[@]} - top - view))
+            if [ "$below" -gt 0 ]; then printf '  \e[2m↓ %d more\e[0m\n' "$below"; else echo; fi
+        fi
         printf '\n  \e[2mmacOS fixes an app'"'"'s network at launch, so every app you change\n'
         printf '  is quit and reopened. Save your work first.\e[0m\n'
         printf '\n  \e[2m↑↓ move · space tick · enter apply · q cancel\e[0m'
