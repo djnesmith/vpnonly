@@ -22,24 +22,44 @@
 <meta name="twitter:description" content="A WireGuard tunnel with no default route, the PF group trick, and why an app restarts once.">
 <meta name="twitter:image" content="https://vpnonly.app/og.png">
 <link rel="icon" type="image/png" href="icon.png">
-<link rel="stylesheet" href="style.css?v=22">
-<script data-goatcounter="https://vpnonly.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "7c46f36f17e44f7693519b06b101987a"}'></script>
+<link rel="stylesheet" href="site.css">
+<script>
+  // Count visits on the real site only, never on a local preview.
+  if (location.hostname === "vpnonly.app") {
+    const gc = document.createElement("script");
+    gc.async = true;
+    gc.src = "//gc.zgo.at/count.js";
+    gc.dataset.goatcounter = "https://vpnonly.goatcounter.com/count";
+    document.head.appendChild(gc);
+    const cf = document.createElement("script");
+    cf.defer = true;
+    cf.src = "https://static.cloudflareinsights.com/beacon.min.js";
+    cf.dataset.cfBeacon = '{"token": "7c46f36f17e44f7693519b06b101987a"}';
+    document.head.appendChild(cf);
+  }
+</script>
+<script type="speculationrules">
+{"prefetch": [{"where": {"and": [{"href_matches": "/*"}, {"not": {"href_matches": "/*.zip"}}]}, "eagerness": "moderate"}]}
+</script>
+<script src="site.js" defer></script>
 </head>
 <body>
 <div class="shell">
 
-<div class="top">
-  <a class="me" href="./">
-    <svg viewBox="0 0 26 30"><path d="M13 1l11 4v9c0 7.5-4.8 13.6-11 15C6.8 27.6 2 21.5 2 14V5z" fill="none" stroke="#15161a" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 1l-11 4v9c0 7.5 4.8 13.6 11 15z" fill="#15161a"/></svg>
-    <b>VPNonly</b>
+<header class="wrap nav">
+  <a class="brand" href="./">
+    <svg viewBox="0 0 26 30" aria-hidden="true"><path d="M13 1l11 4v9c0 7.5-4.8 13.6-11 15C6.8 27.6 2 21.5 2 14V5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 1l-11 4v9c0 7.5 4.8 13.6 11 15z" fill="currentColor"/></svg>
+    VPNonly
   </a>
-  <a class="here" href="how-it-works.html">how it works</a>
-  <a href="guides/">guides</a>
-  <a href="faq.html">faq</a>
-  <a href="install.html">install</a>
-  <a href="https://github.com/kanishkdan/vpnonly">github</a>
-</div>
+  <nav aria-label="Site">
+    <a href="how-it-works.html" aria-current="page">How it works</a>
+    <a href="guides/">Guides</a>
+    <a href="faq.html">FAQ</a>
+    <a href="install.html">Install</a>
+    <a href="https://github.com/kanishkdan/vpnonly">GitHub</a>
+  </nav>
+  <a class="nav-buy" href="https://dodo.pe/get-vpnonly" data-goatcounter-click="buy-nav-how-it-works">Buy · $19</a>
+</header>
 
 <div class="solo">
 <h1>How it works</h1>
@@ -75,18 +95,22 @@ block return out quick proto { tcp udp } from any to any group vpn_a1b2c3</code>
 
 <p>A version with no restarts at all needs Apple's Network Extension framework, which sees every connection along with the app that made it. That's the plan, it's just a much bigger build.</p>
 
-<p style="margin-top:34px;"><a class="btn" href="https://dodo.pe/get-vpnonly">Get it for Mac — $19</a></p>
+<p class="cta"><a class="btn" href="https://dodo.pe/get-vpnonly" data-goatcounter-click="buy-how-it-works">Get it for Mac — $19</a></p>
 
-<div class="foot">
-  <span>Made by <a href="https://x.com/kanishkrazdan">@kanishkrazdan</a></span>
-  <a href="guides/">guides</a>
-  <a href="download.html">download</a>
-  <a href="https://customer.dodopayments.com/login/bus_0NlVlYzwOq7gzrk1tWl0u">your purchases</a>
-  <a href="changelog.html">changelog</a>
-  <a href="terms.html">terms &amp; privacy</a>
-</div>
 </div>
 
+</div>
+<footer class="wrap foot">
+  <span class="me">Made by <a href="https://x.com/kanishkrazdan">Kanishk</a></span>
+  <a href="guides/">Guides</a>
+  <a href="download.html">Download</a>
+  <a href="https://customer.dodopayments.com/login/bus_0NlVlYzwOq7gzrk1tWl0u">Your purchases</a>
+  <a href="changelog.html">Changelog</a>
+  <a href="terms.html">Terms &amp; privacy</a>
+</footer>
+<div class="buybar" hidden>
+  <span><b>VPNonly</b> · $19 once, for Mac</span>
+  <a class="btn" href="https://dodo.pe/get-vpnonly" data-goatcounter-click="buy-bar-how-it-works">Get it</a>
 </div>
 </body>
 </html>

@@ -22,30 +22,64 @@
 <meta name="twitter:description" content="What changed in each version of VPNonly.">
 <meta name="twitter:image" content="https://vpnonly.app/og.png">
 <link rel="icon" type="image/png" href="icon.png">
-<link rel="stylesheet" href="style.css?v=22">
-<script data-goatcounter="https://vpnonly.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "7c46f36f17e44f7693519b06b101987a"}'></script>
+<link rel="stylesheet" href="site.css">
+<script>
+  // Count visits on the real site only, never on a local preview.
+  if (location.hostname === "vpnonly.app") {
+    const gc = document.createElement("script");
+    gc.async = true;
+    gc.src = "//gc.zgo.at/count.js";
+    gc.dataset.goatcounter = "https://vpnonly.goatcounter.com/count";
+    document.head.appendChild(gc);
+    const cf = document.createElement("script");
+    cf.defer = true;
+    cf.src = "https://static.cloudflareinsights.com/beacon.min.js";
+    cf.dataset.cfBeacon = '{"token": "7c46f36f17e44f7693519b06b101987a"}';
+    document.head.appendChild(cf);
+  }
+</script>
+<script type="speculationrules">
+{"prefetch": [{"where": {"and": [{"href_matches": "/*"}, {"not": {"href_matches": "/*.zip"}}]}, "eagerness": "moderate"}]}
+</script>
+<script src="site.js" defer></script>
 </head>
 <body>
 <div class="shell">
 
-<div class="top">
-  <a class="me" href="./">
-    <svg viewBox="0 0 26 30"><path d="M13 1l11 4v9c0 7.5-4.8 13.6-11 15C6.8 27.6 2 21.5 2 14V5z" fill="none" stroke="#15161a" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 1l-11 4v9c0 7.5 4.8 13.6 11 15z" fill="#15161a"/></svg>
-    <b>VPNonly</b>
+<header class="wrap nav">
+  <a class="brand" href="./">
+    <svg viewBox="0 0 26 30" aria-hidden="true"><path d="M13 1l11 4v9c0 7.5-4.8 13.6-11 15C6.8 27.6 2 21.5 2 14V5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M13 1l-11 4v9c0 7.5 4.8 13.6 11 15z" fill="currentColor"/></svg>
+    VPNonly
   </a>
-  <a href="how-it-works.html">how it works</a>
-  <a href="guides/">guides</a>
-  <a href="faq.html">faq</a>
-  <a href="install.html">install</a>
-  <a href="https://github.com/kanishkdan/vpnonly">github</a>
-</div>
+  <nav aria-label="Site">
+    <a href="how-it-works.html">How it works</a>
+    <a href="guides/">Guides</a>
+    <a href="faq.html">FAQ</a>
+    <a href="install.html">Install</a>
+    <a href="https://github.com/kanishkdan/vpnonly">GitHub</a>
+  </nav>
+  <a class="nav-buy" href="https://dodo.pe/get-vpnonly" data-goatcounter-click="buy-nav-changelog">Buy · $19</a>
+</header>
 
 <div class="solo">
 <h1>Changelog</h1>
 <p class="lead">Everything that's changed, including the things that were broken. VPNonly updates itself from 1.5.0 onwards.</p>
 
 <!-- RELEASES -->
+<h2>1.9.19 <span style="font-weight:400;color:#979ca4;font-size:15px;">· 26 September 2026</span></h2>
+<p>Almost everything in this release came from one customer's wish list. Thank you.</p>
+<ul>
+  <li><b>Your apps stay put.</b> Every app you switch on now lives in a Your apps section at the top of the list, and it stays there when you switch it off, so you never have to hunt for it again. Right-click any app to add or remove it, or turn on Show Only Your Apps in the ⋯ menu to hide everything else until you search.</li>
+  <li><b>Pick a server in one click.</b> The menu at the bottom of the popup now lists your servers directly, with a tick on the one you're using. Big lists, like Mullvad's full download, are grouped by location.</li>
+  <li><b>Labels that say only what matters.</b> With one provider, the label is just the place and the server: Sweden · STO · 002. Mullvad files are recognised as Mullvad, and Rename config in the ⋯ menu names any provider the way you like.</li>
+  <li><b>Status at a glance, in colour.</b> Turn on Coloured Menu Bar Icon in the ⋯ menu and the shield goes red when you're disconnected, green when you're connected, and orange when something needs a look.</li>
+  <li><b>Dialogs on top.</b> Dialogs and file pickers now open above the popup instead of hiding underneath it, and Check for Updates moves the popup out of the way.</li>
+  <li><b>One entry per app.</b> Apps that put an alias or a link in Applications, like JDownloader, now appear once.</li>
+  <li><b>A tidier list.</b> No more identifiers under app names, and Apple's background helpers such as Siri, which can't be routed, are no longer offered.</li>
+  <li><b>Straighter answers.</b> If an app is running outside the VPN, or can't be routed at all, its row and the menu bar icon now say so instead of looking protected.</li>
+</ul>
+<p>Coming from 1.9.18, this update installs without asking for your password.</p>
+
 <h2>1.9.18 <span style="font-weight:400;color:#979ca4;font-size:15px;">· 24 September 2026</span></h2>
 <ul>
   <li>If another VPN app switches off the Mac&#x27;s firewall, VPNonly now turns it back on and re-applies its rules within a minute; you can also pick a specific server inside a location, and apps installed in folders now show up, with Choose another app… for the rest.</li>
@@ -107,16 +141,16 @@
   <li>Licence activation, and an uninstaller that removes the root engine and its permissions.</li>
 </ul>
 
-<div class="foot">
-  <span>Made by <a href="https://x.com/kanishkrazdan">@kanishkrazdan</a></span>
-  <a href="guides/">guides</a>
-  <a href="download.html">download</a>
-  <a href="https://customer.dodopayments.com/login/bus_0NlVlYzwOq7gzrk1tWl0u">your purchases</a>
-  <a href="changelog.html">changelog</a>
-  <a href="terms.html">terms &amp; privacy</a>
-</div>
 </div>
 
 </div>
+<footer class="wrap foot">
+  <span class="me">Made by <a href="https://x.com/kanishkrazdan">Kanishk</a></span>
+  <a href="guides/">Guides</a>
+  <a href="download.html">Download</a>
+  <a href="https://customer.dodopayments.com/login/bus_0NlVlYzwOq7gzrk1tWl0u">Your purchases</a>
+  <a href="changelog.html">Changelog</a>
+  <a href="terms.html">Terms &amp; privacy</a>
+</footer>
 </body>
 </html>
