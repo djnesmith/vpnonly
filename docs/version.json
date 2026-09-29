@@ -1,5 +1,5 @@
 {
-  "version": "1.9.20",
+  "version": "1.9.21",
   "url": "https://vpnonly.app/",
-  "notes": "Check tests every app on the VPN, and the popup is more compact."
+  "notes": "Clear the search with one click or Escape, and a cleaner coloured shield."
 }
