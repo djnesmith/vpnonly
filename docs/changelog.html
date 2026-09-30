@@ -68,9 +68,12 @@
 <div class="releases">
 <!-- RELEASES -->
 <h2>1.9.24 <span style="font-weight:400;color:#979ca4;font-size:15px;">· 1 October 2026</span></h2>
+<p>Two fixes for moments where VPNonly could look like it was protecting you when it wasn't, both from customers' notes.</p>
 <ul>
-  <li>VPNonly now says plainly when no app is on the VPN, and warns when AdGuard or a proxy on your Mac would send apps around it.</li>
+  <li><b>No apps on the VPN yet.</b> Connected with nothing switched on used to show a green “Connected to NordVPN”, which reads as protected if you're used to a VPN that covers the whole Mac. Now it says no app is on the VPN yet, and the dot and the menu bar icon only turn green once one is. Connect stays hidden until an app is switched on, since switching one on connects anyway.</li>
+  <li><b>A warning when something reroutes your apps.</b> AdGuard for Mac, and filters like it, take an app's connections and make them again from their own process, which skips the VPN while Check still passes. A proxy running on the Mac does the same for browsers. VPNonly now notices either and tells you what to change, right in the popup.</li>
 </ul>
+<p>Coming from 1.9.22 or later, this update installs without asking for your password.</p>
 
 <h2>1.9.23 <span style="font-weight:400;color:#979ca4;font-size:15px;">· 30 September 2026</span></h2>
 <p>An honesty fix, found while testing 1.9.22.</p>
