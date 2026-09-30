@@ -102,7 +102,14 @@
 
 <details class="qsec" open>
 <summary><h2>What happens if the VPN drops?</h2></summary>
-<p>Those apps get blocked until it's back. They never silently fall back to your normal connection.</p>
+<p>Those apps get blocked from the internet until it's back. They never silently fall back to your normal connection. With Allow Local Network on, they can still reach devices on your own network, like your router or printer.</p>
+</details>
+
+<details class="qsec" open>
+<summary><h2>Can apps on the VPN reach my router or printer?</h2></summary>
+<p>Yes. <strong>Allow Local Network</strong> in the ⋯ menu is on unless you turn it off. Apps on the VPN reach the private network your Mac is on over Wi-Fi or Ethernet directly: your router's settings page, a printer, a NAS, or a local dev server. Everything else still goes through the tunnel, including any private address that isn't on your network. Very large networks, bigger than a /16 like some offices use, aren't included.</p>
+<p>A few things stay closed on purpose. Apps on the VPN can reach your router only on ports 53, 80 and 443, which covers DNS and most routers' settings pages, and on most routers keeps them away from UPnP and the other ways an app can ask it to open a port. A settings page on another port, like 8443, stays blocked. Local access also stays off while your Mac uses a proxy, because a proxy on your network could carry an app's traffic around the tunnel.</p>
+<p>Turn it off on networks you don't trust, like public Wi-Fi, because a device there could otherwise receive an app's connections directly. And if your network uses the same addresses as your VPN's own internal services, or as a home network you reach through your own WireGuard server, those addresses go to the local network while this is on.</p>
 </details>
 
 <details class="qsec" open>
