@@ -1,5 +1,5 @@
 {
-  "version": "1.9.22",
+  "version": "1.9.23",
   "url": "https://vpnonly.app/",
-  "notes": "Apps on the VPN can now reach your router, printer and other devices at home, and browsers keep their tabs when they join the VPN."
+  "notes": "Browsers built on Apple's WebKit, which VPNonly can't route, can no longer be switched on and show as protected, and Helium keeps its tabs when it joins the VPN."
 }
