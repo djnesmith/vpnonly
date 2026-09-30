@@ -12,7 +12,7 @@
       <sparkle:version>1.9.23</sparkle:version>
       <sparkle:shortVersionString>1.9.23</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
-      <description><![CDATA[<p>Browsers built on Apple&#x27;s WebKit, which VPNonly can&#x27;t route, can no longer be switched on and show as protected, and Helium keeps its tabs when it joins the VPN.</p>]]></description>
+      <description><![CDATA[<p>An honesty fix, found while testing 1.9.22.</p><ul><li><b>Browsers built on Safari's engine.</b> Like Safari, a browser that shows its pages with Apple's WebKit hands them to separate macOS processes, so they go around the VPN. VPNonly used to let you switch one on and call it protected. Now it says it can't be routed, and one you'd already switched on is switched off, with the reason.</li><li><b>Chrome, Firefox, Arc, Brave and Helium are unaffected.</b> They bring their own engine, and their pages go through the VPN.</li><li><b>Helium keeps its tabs.</b> Switching it on brings it back with the tabs it had, like Chrome and Vivaldi.</li></ul><p>Coming from 1.9.22, this update installs without asking for your password.</p>]]></description>
       <enclosure url="https://vpnonly.app/VPNonly-1.9.23.zip"
                  sparkle:edSignature="zDo4DLt7SKrrODF2dDx9YDynr0dKUWNZXR+EHn6a4kxZmsfWk20aEP4zPOMOnWHJ5SMCY6BERx1uPEDddLCuCg=="
                  length="3391747"
