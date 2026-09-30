@@ -1,5 +1,5 @@
 {
-  "version": "1.9.23",
+  "version": "1.9.24",
   "url": "https://vpnonly.app/",
-  "notes": "Browsers built on Apple's WebKit, which VPNonly can't route, can no longer be switched on and show as protected, and Helium keeps its tabs when it joins the VPN."
+  "notes": "VPNonly now says plainly when no app is on the VPN, and warns when AdGuard or a proxy on your Mac would send apps around it."
 }
