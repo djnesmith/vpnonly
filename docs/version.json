@@ -1,5 +1,5 @@
 {
-  "version": "1.9.21",
+  "version": "1.9.22",
   "url": "https://vpnonly.app/",
-  "notes": "Clear the search with one click or Escape, and a cleaner coloured shield."
+  "notes": "Apps on the VPN can now reach your router, printer and other devices at home, and browsers keep their tabs when they join the VPN."
 }

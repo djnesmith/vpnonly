@@ -7,13 +7,25 @@
     <language>en</language>
 
     <item>
+      <title>Version 1.9.22</title>
+      <pubDate>Wed, 30 Sep 2026 17:00:42 +0530</pubDate>
+      <sparkle:version>1.9.22</sparkle:version>
+      <sparkle:shortVersionString>1.9.22</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[<p>Apps on the VPN can now reach your router, printer and other devices at home, and browsers keep their tabs when they join the VPN.</p>]]></description>
+      <enclosure url="https://vpnonly.app/VPNonly-1.9.22.zip"
+                 sparkle:edSignature="ZsRsCrmIjzO12OrkDTPC3HzvuaUEiy66iPFyp4o9QQsvZWlIJzWqMN+gsz9eg6jho62Y02/xPaL5Guca7hXzBg=="
+                 length="3384518"
+                 type="application/octet-stream" />
+    </item>
+    <item>
       <title>Version 1.9.21</title>
       <pubDate>Tue, 29 Sep 2026 14:57:02 +0530</pubDate>
       <sparkle:version>1.9.21</sparkle:version>
       <sparkle:shortVersionString>1.9.21</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
       <description><![CDATA[<p>Three small touches, again from the same customer's notes.</p><ul><li><b>Clear the search in one go.</b> The search field has a small x on the right once you type, and Escape clears it too while the field has focus.</li><li><b>A cleaner coloured shield.</b> With Coloured Menu Bar Icon on, the shield keeps its normal shape: the outline stays the menu bar's own colour, and only the left half turns red, green or orange.</li><li><b>Tidier status lines.</b> When the status wraps onto a second line, it no longer starts with a stray dot.</li></ul><p>Coming from 1.9.18 or later, this update installs without asking for your password.</p>]]></description>
-      <enclosure url="https://vpnonly.app/VPNonly-1.9.21.zip"
+      <enclosure url="https://github.com/kanishkdan/vpnonly/releases/download/v1.9.21/VPNonly-1.9.21.zip"
                  sparkle:edSignature="kOj/Zh9KYFKCavlOszhFxxIwy/kPKvI3gPfYM125e1GcI8z18xdRdnTvzebTKWzL+cflLcA+eSH98BxELkf3CQ=="
                  length="3301227"
                  type="application/octet-stream" />
