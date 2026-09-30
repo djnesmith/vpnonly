@@ -70,18 +70,30 @@
 <p><code>wireguard-go</code> opens a tunnel to your VPN provider, and <strong>no default route is installed</strong>. The tunnel just sits there until you send something into it. So when something breaks, one app goes offline rather than your whole internet.</p>
 
 <h2>2. The firewall picks who goes in</h2>
-<p>macOS ships with PF, a packet filter that can't match traffic by application, but <em>can</em> match by unix group. So each app you add gets its own private group, and two rules do the work:</p>
+<p>macOS ships with PF, a packet filter that can't match traffic by application, but <em>can</em> match by unix group. So each app you add gets its own private group. With Allow Local Network on, which is the default, a few rules come first so the app can still reach your own network: your router only on ports 53, 80 and 443, nothing on the port-mapping ports 1900 and 5351, then the rest of your network, from the Mac's own address there:</p>
 
-<pre><code>pass out quick route-to (utunN 10.5.0.2) inet proto { tcp udp } \
+<pre><code>pass out quick on ! lo0 inet proto { tcp udp } from 192.168.1.12 \
+    to 192.168.1.1 port { 53 80 443 } group vpn_a1b2c3 keep state
+block return out quick on ! lo0 inet from any to 192.168.1.1 group vpn_a1b2c3
+block return out quick on ! lo0 inet proto { tcp udp } from any \
+    to 192.168.1.0/24 port { 1900 5351 } group vpn_a1b2c3
+pass out quick on ! lo0 inet proto { tcp udp } from 192.168.1.12 \
+    to 192.168.1.0/24 group vpn_a1b2c3 keep state</code></pre>
+
+<p>After those, two rules do the main work:</p>
+
+<pre><code>pass out quick on ! lo0 route-to (utunN 10.5.0.2) inet proto { tcp udp } \
     from any to any group vpn_a1b2c3 keep state
-block return out quick proto { tcp udp } from any to any group vpn_a1b2c3</code></pre>
+block return out quick on ! lo0 from any to any group vpn_a1b2c3</code></pre>
 
 <p>macOS chooses a free <code>utunN</code>; VPNonly records the exact interface and process it created instead of assuming a fixed name. These rules live in the dedicated <code>com.apple/vpnonly</code> PF anchor, so normal connect and disconnect operations never replace another product's main firewall rules. The pass sends the group into the tunnel. The block is the kill switch when an owned tunnel is unavailable.</p>
 
-<p>A process's group is fixed when it starts, but firewall rules aren't. That's why an app has to restart once to join, and never again. After that, toggling it is just rewriting rules.</p>
+<p>Because the local rules come first, your own network stays reachable even while the tunnel is down. Turn the setting off and only the last two rules are left.</p>
+
+<p>A process's group is fixed when it starts, but firewall rules aren't. That's why an app has to restart once to join. While it stays open, toggling it is just rewriting rules.</p>
 
 <h2>3. A very small launcher</h2>
-<p>A 30-line C program starts your app under its group and immediately drops root. Helper processes inherit the group, so apps that spawn a dozen subprocesses are covered too.</p>
+<p>A short C program, about a hundred lines, starts your app under its group and immediately drops root. Helper processes inherit the group, so apps that spawn a dozen subprocesses are covered too.</p>
 
 <h2>About the password prompt</h2>
 <p>Creating network interfaces and firewall rules needs admin rights. That's true of any VPN software. VPNonly installs a small engine owned by root; first setup and security-sensitive engine upgrades can ask for approval. From version 1.9.8 onward, the <a href="https://github.com/kanishkdan/vpnonly/tree/main/app-engine">exact privileged source</a> is published with each release.</p>
@@ -91,6 +103,7 @@ block return out quick proto { tcp udp } from any to any group vpn_a1b2c3</code>
   <li>DNS for tunneled apps goes through the system resolver, which isn't in any group. Connections are tunneled, lookups aren't. Doing it properly needs a scoped resolver.</li>
   <li>IPv6 for tunneled apps is blocked rather than routed. Nothing leaks, but there's no v6.</li>
   <li>An app opened from the Dock isn't in a group, so it needs one restart through VPNonly.</li>
+  <li>Safari and other browsers built on WebKit can't be routed. Their pages load in system processes that never carry the app's group, so VPNonly won't switch them on.</li>
 </ul>
 
 <p>A version with no restarts at all needs Apple's Network Extension framework, which sees every connection along with the app that made it. That's the plan, it's just a much bigger build.</p>

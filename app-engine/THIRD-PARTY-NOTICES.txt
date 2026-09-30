@@ -1,8 +1,8 @@
 VPNonly — third-party software notices
 ======================================
 
-VPNonly bundles two unmodified programs from the WireGuard project and the
-Sparkle update framework.
+VPNonly bundles two programs from the WireGuard project (wg unmodified, and
+wireguard-go with one small published patch) and the Sparkle update framework.
 
 -----------------------------------------------------------------------------
 1. wireguard-tools ("wg")            version 1.0.20260223
@@ -29,7 +29,11 @@ Sparkle update framework.
    Full licence text: wireguard-go-MIT.txt (included alongside this file)
    Upstream source: https://git.zx2c4.com/wireguard-go/
 
-   The binary distributed with VPNonly is unmodified.
+   The binary distributed with VPNonly is built from that upstream source with
+   one patch applied, wireguard-go-nat.patch, published with VPNonly's engine
+   source at https://github.com/kanishkdan/vpnonly/tree/main/app-engine. It
+   rewrites the inner source address of packets entering the tunnel to the
+   tunnel's own address, so that every provider accepts them.
 
 -----------------------------------------------------------------------------
 3. Sparkle                            version 2.9.6

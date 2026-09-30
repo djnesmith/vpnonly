@@ -88,7 +88,7 @@
 
 <p>That matters more than it sounds. Every app you didn't think about, including ones you open later, goes through another country by default. You're opting things out of a decision that's already been made for the whole machine.</p>
 
-<p>The other model is the opposite: <strong>your Mac stays on its normal connection, and individual apps opt in.</strong> Nothing is tunneled unless you asked for it. ExpressVPN, PIA and Windscribe can be set up this way in their own apps. It's also how <a href="../">VPNonly</a> works, and if its tunnel drops, the apps you picked lose connectivity rather than silently falling back.</p>
+<p>The other model is the opposite: <strong>your Mac stays on its normal connection, and individual apps opt in.</strong> Nothing is tunneled unless you asked for it. ExpressVPN, PIA and Windscribe can be set up this way in their own apps. It's also how <a href="../">VPNonly</a> works, and if its tunnel drops, the apps you picked lose internet access rather than silently falling back.</p>
 
 <h2>The other difference: it's tied to your provider</h2>
 
@@ -110,7 +110,7 @@
 <p>One difference you'll notice: VPNonly relaunches an app once when it moves it into the tunnel, because what it routes by is fixed when an app starts. Split tunneling built on Apple's Network Extension framework, which ExpressVPN and PIA use, can switch apps without that. <a href="../how-it-works.html">Why VPNonly works this way</a>.</p>
 
 <h2>One limit most of them share</h2>
-<p>Safari is hard to split-tunnel. WebKit hands its connections to separate system processes that macOS launches on its own, so they don't carry Safari's identity. Mullvad and Proton both document that their split tunneling doesn't work with Safari or other WebKit apps, VPNonly can't route it either, and none of the providers above document Safari working. If you want a browser on a different exit IP, use Chrome, Firefox, Arc or Brave.</p>
+<p>Safari is hard to split-tunnel. WebKit hands its connections to separate system processes that macOS launches on its own, so they don't carry Safari's identity. Mullvad and Proton both document that their split tunneling doesn't work with Safari or other WebKit apps, VPNonly can't route them either and won't switch them on, and none of the providers above document Safari working. If you want a browser on a different exit IP, use Chrome, Firefox, Arc or Brave.</p>
 
 <h2>Sources</h2>
 <ul>
