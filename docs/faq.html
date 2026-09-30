@@ -85,7 +85,7 @@
 <details class="qsec" open>
 <summary><h2>Does it work with AdGuard or Little Snitch?</h2></summary>
 <p>Little Snitch, yes. It decides whether each connection is allowed, but the app still makes the connection itself, so VPNonly's rules still see it.</p>
-<p><strong>AdGuard for Mac</strong> doesn't mix with it. To filter an app, AdGuard takes over that app's connections and makes them again from its own process. Those connections don't come from the app any more, so they skip the VPN and use your normal connection, even though the app is switched on. Other filters that re-send traffic this way have the same effect.</p>
+<p><strong>AdGuard for Mac</strong> doesn't mix with it. To filter an app, AdGuard takes over that app's connections and makes them again from its own process. Those connections don't come from the app any more, so they skip the VPN and use your normal connection, even though the app is switched on. Other filters that re-send traffic this way have the same effect, and so does a proxy running on the Mac itself. From 1.9.24, VPNonly notices both and says so in the popup, with what to change.</p>
 <p>The fix is to tell AdGuard to leave the app alone: its settings let you exclude an app from filtering, under Network. If it's a browser, use an ad-blocking extension inside the browser instead. Then check it: click <strong>Check</strong> in the popup, and open a what's-my-IP page such as <a href="https://ipinfo.io/">ipinfo.io</a> in the app itself. Both should show the VPN's address. If the popup passes but the page doesn't, something on the Mac is still re-sending the app's traffic.</p>
 </details>
 
