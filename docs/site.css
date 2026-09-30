@@ -386,6 +386,17 @@ figure.demo figcaption { margin-top: 10px; font-size: 15px; color: var(--muted);
 .fc-app img { width: 28px; height: 28px; flex: none; }
 .fc-app span { flex: 1; }
 .fc-app.on { border-color: rgba(40, 205, 65, .6); box-shadow: 0 0 0 3px rgba(40, 205, 65, .13); }
+/* the switches work: flip one and its wire moves */
+.fc-app { cursor: pointer; user-select: none; -webkit-user-select: none; transition: border-color .2s, box-shadow .2s; }
+.fc-app:hover { border-color: var(--underline); }
+.fc-app.on:hover { border-color: rgba(40, 205, 65, .85); }
+.fc-app:focus-visible { outline: 2px solid var(--mac-blue); outline-offset: 2px; }
+.wire.idle { stroke-dasharray: 4 5; }
+.fc-dest, .fc-hub { transition: border-color .25s, box-shadow .25s; }
+.flowchart.idle .fc-dest.vpn { border-color: var(--line); box-shadow: none; }
+.flowchart.idle .fc-dest.vpn .fc-k::before { background: var(--muted); box-shadow: none; }
+.flowchart.idle .fc-hub { box-shadow: 0 0 0 6px var(--card); }
+.fc-hint { margin-top: 14px; text-align: center; font-size: 14px; color: var(--muted); }
 .fc-hub {
   display: grid; justify-items: center; gap: 3px; padding: 20px 24px 18px; text-align: center;
   border-radius: 20px; background: var(--bg); border: 1px solid var(--line);

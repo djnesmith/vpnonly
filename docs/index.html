@@ -304,24 +304,25 @@
     <h2>How it works</h2>
     <p class="intro">VPNonly sits between your apps and the internet. The apps you switch on go through a WireGuard tunnel, and everything else takes your normal connection, untouched.</p>
 
-    <div class="flowchart" aria-hidden="true">
-      <svg class="wires"></svg>
+    <div class="flowchart">
+      <svg class="wires" aria-hidden="true"></svg>
       <div class="fc-col fc-apps">
-        <div class="fc-app on"><img src="img/google-chrome.png" alt=""><span>Google Chrome</span><i class="sw on"></i></div>
-        <div class="fc-app"><img src="img/capcut.png" alt=""><span>CapCut</span><i class="sw"></i></div>
-        <div class="fc-app"><img src="img/slack.png" alt=""><span>Slack</span><i class="sw"></i></div>
-        <div class="fc-app"><img src="img/spotify.png" alt=""><span>Spotify</span><i class="sw"></i></div>
-        <div class="fc-app"><img src="img/whatsapp.png" alt=""><span>WhatsApp</span><i class="sw"></i></div>
+        <div class="fc-app on" role="switch" aria-checked="true" tabindex="0" aria-label="Google Chrome"><img src="img/google-chrome.png" alt=""><span>Google Chrome</span><i class="sw on"></i></div>
+        <div class="fc-app" role="switch" aria-checked="false" tabindex="0" aria-label="CapCut"><img src="img/capcut.png" alt=""><span>CapCut</span><i class="sw"></i></div>
+        <div class="fc-app" role="switch" aria-checked="false" tabindex="0" aria-label="Slack"><img src="img/slack.png" alt=""><span>Slack</span><i class="sw"></i></div>
+        <div class="fc-app" role="switch" aria-checked="false" tabindex="0" aria-label="Spotify"><img src="img/spotify.png" alt=""><span>Spotify</span><i class="sw"></i></div>
+        <div class="fc-app" role="switch" aria-checked="false" tabindex="0" aria-label="WhatsApp"><img src="img/whatsapp.png" alt=""><span>WhatsApp</span><i class="sw"></i></div>
       </div>
-      <div class="fc-col fc-mid">
+      <div class="fc-col fc-mid" aria-hidden="true">
         <div class="fc-hub"><img src="img/vpnonly.png" alt=""><b>VPNonly</b><span>macOS firewall · WireGuard</span></div>
       </div>
-      <div class="fc-col fc-out">
+      <div class="fc-col fc-out" aria-hidden="true">
         <div class="fc-dest vpn"><span class="fc-k">WireGuard tunnel</span><b>NordVPN · Singapore</b><span class="fc-ip">203.0.113.24</span></div>
         <div class="fc-dest home"><span class="fc-k">Your normal connection</span><b>Home</b><span class="fc-ip">198.51.100.7</span></div>
       </div>
     </div>
-    <p class="vh">Google Chrome is switched on, so VPNonly sends it through the WireGuard tunnel to Singapore. CapCut, Slack, Spotify and WhatsApp are off, so they keep your normal connection at home.</p>
+    <p class="fc-hint">Try it: switch the apps on and off.</p>
+    <p class="vh" id="fc-say" aria-live="polite">Google Chrome is switched on, so VPNonly sends it through the WireGuard tunnel to Singapore. CapCut, Slack, Spotify and WhatsApp are off, so they keep your normal connection at home.</p>
 
     <ol class="steps">
       <li><b>A tunnel nobody uses</b>It opens a WireGuard tunnel that nothing uses by default, so your normal connection is never touched.</li>
@@ -420,12 +421,15 @@
 })();
 
 // How it works: wires from each app into VPNonly, and out to the tunnel or
-// home, drawn from where the boxes actually sit so they fit any screen.
+// home, drawn from where the boxes actually sit so they fit any screen. The
+// switches work: flip one and its wire moves. With none on, the tunnel sits
+// there unused, which is exactly how the app starts.
 (() => {
   const fc = document.querySelector(".flowchart");
   if (!fc) return;
   const svg = fc.querySelector(".wires"), hub = fc.querySelector(".fc-hub");
   const apps = [...fc.querySelectorAll(".fc-app")];
+  const isOn = el => el.classList.contains("on");
   const outs = [[fc.querySelector(".fc-dest.vpn"), "vpn", 3, 1.8], [fc.querySelector(".fc-dest.home"), "home", 4, 2.8]];
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const NS = "http://www.w3.org/2000/svg", XL = "http://www.w3.org/1999/xlink";
@@ -470,17 +474,49 @@
       const A = box(el), off = (i - (apps.length - 1) / 2) * (down ? 10 : 9);
       const from = down ? [A.x + A.w / 2, A.y + A.h] : [A.x + A.w, A.y + A.h / 2];
       const to = down ? [H.x + H.w / 2 + off, H.y] : [H.x, H.y + H.h / 2 + off];
-      const on = el.classList.contains("on");
+      const on = isOn(el);
       wire(from, to, on ? "vpn" : "home", on ? 2 : 1, on ? 1.6 : 2.6);
     });
+    const idle = !apps.some(isOn);
+    fc.classList.toggle("idle", idle);
     outs.forEach(([el, kind, dots, dur], i) => {
       const D = box(el), off = i ? 12 : -12;
       const from = down ? [H.x + H.w / 2 + off, H.y + H.h] : [H.x + H.w, H.y + H.h / 2 + off];
       const to = down ? [D.x + D.w / 2, D.y] : [D.x, D.y + D.h / 2];
-      wire(from, to, kind, dots, dur);
+      if (kind === "vpn" && idle) wire(from, to, "idle", 0, dur);
+      else wire(from, to, kind, dots, dur);
     });
   };
   draw();
+
+  // Said aloud as well: the drawing itself is hidden from screen readers.
+  const say = document.getElementById("fc-say");
+  const names = list => list.length < 2 ? list.join("")
+    : list.slice(0, -1).join(", ") + " and " + list[list.length - 1];
+  const describe = () => {
+    if (!say) return;
+    const on = apps.filter(isOn).map(el => el.getAttribute("aria-label"));
+    const off = apps.filter(el => !isOn(el)).map(el => el.getAttribute("aria-label"));
+    if (!on.length) { say.textContent = "Nothing is switched on, so the tunnel sits unused and every app keeps your normal connection at home."; return; }
+    say.textContent = names(on) + (on.length === 1 ? " is" : " are") + " switched on, so VPNonly sends "
+      + (on.length === 1 ? "it" : "them") + " through the WireGuard tunnel to Singapore."
+      + (off.length ? " " + names(off) + (off.length === 1 ? " is" : " are") + " off, so "
+        + (off.length === 1 ? "it keeps" : "they keep") + " your normal connection at home." : "");
+  };
+  apps.forEach(el => {
+    const flip = () => {
+      const on = !isOn(el);
+      el.classList.toggle("on", on);
+      el.setAttribute("aria-checked", on ? "true" : "false");
+      el.querySelector(".sw").classList.toggle("on", on);
+      draw();
+      describe();
+    };
+    el.addEventListener("click", flip);
+    el.addEventListener("keydown", e => {
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); flip(); }
+    });
+  });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   let t;
   addEventListener("resize", () => { clearTimeout(t); t = setTimeout(draw, 120); });
@@ -504,7 +540,7 @@
   const cursor = desk.querySelector(".cursor");
   const exit = "NordVPN · Singapore";
   const states = {
-    idle:      { busy: 0, primary: "Connected to " + exit, live: "no apps routed yet", check: "", on: 0, sub: "", ok: 0, ips: 0, shield: 0 },
+    idle:      { busy: 0, primary: "No apps on the VPN yet", live: "Connected to " + exit + ". Switch on an app below to use it.", check: "", on: 0, sub: "", ok: 0, ips: 0, shield: 0 },
     moving:    { busy: 1, primary: "Moving Google Chrome into the VPN…", live: "", check: "Check", on: 1, sub: "joining the VPN…", ok: 0, ips: 0, shield: 0 },
     protected: { busy: 0, primary: "Google Chrome is protected", live: "Use Check any time to verify the public exit", check: "Check", on: 1, sub: "in VPN · " + exit, ok: 1, ips: 0, shield: 1 },
     checking:  { busy: 0, primary: "Checking Google Chrome…", live: "Use Check any time to verify the public exit", check: "Checking…", on: 1, sub: "in VPN · " + exit, ok: 1, ips: 0, shield: 1 },
@@ -522,6 +558,8 @@
     ui.sub.textContent = s.sub;
     ui.sub.classList.toggle("ok", !!s.ok);
     pop.toggleAttribute("data-busy", !!s.busy);
+    // Green only once an app is on the VPN, as in the app since 1.9.24.
+    pop.toggleAttribute("data-up", !!s.shield);
     desk.dataset.shield = s.shield ? "on" : "off";
   };
 
