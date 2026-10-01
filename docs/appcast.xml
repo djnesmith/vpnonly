@@ -7,13 +7,25 @@
     <language>en</language>
 
     <item>
+      <title>Version 1.9.25</title>
+      <pubDate>Thu, 01 Oct 2026 17:24:29 +0530</pubDate>
+      <sparkle:version>1.9.25</sparkle:version>
+      <sparkle:shortVersionString>1.9.25</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[<p>An app you switch on now stays where it is in the list, so you see its switch flip, and joins Your apps the next time you open VPNonly.</p>]]></description>
+      <enclosure url="https://vpnonly.app/VPNonly-1.9.25.zip"
+                 sparkle:edSignature="g7Far/ZITKApJcfyFGuy/CY60Ni04g6HUfajal2Y5DnOOe22UuRRUi5QByiraRphtVcB74qn7i6tOZSA/aUTCw=="
+                 length="3405562"
+                 type="application/octet-stream" />
+    </item>
+    <item>
       <title>Version 1.9.24</title>
       <pubDate>Thu, 01 Oct 2026 00:46:27 +0530</pubDate>
       <sparkle:version>1.9.24</sparkle:version>
       <sparkle:shortVersionString>1.9.24</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
       <description><![CDATA[<p>Two fixes for moments where VPNonly could look like it was protecting you when it wasn't, both from customers' notes.</p><ul><li><b>No apps on the VPN yet.</b> Connected with nothing switched on used to show a green “Connected to NordVPN”, which reads as protected if you're used to a VPN that covers the whole Mac. Now it says no app is on the VPN yet, and the dot and the menu bar icon only turn green once one is. Connect stays hidden until an app is switched on, since switching one on connects anyway.</li><li><b>A warning when something reroutes your apps.</b> AdGuard for Mac, and filters like it, take an app's connections and make them again from their own process, which skips the VPN while Check still passes. A proxy running on the Mac does the same for browsers. VPNonly now notices either and tells you what to change, right in the popup.</li></ul><p>Coming from 1.9.22 or later, this update installs without asking for your password.</p>]]></description>
-      <enclosure url="https://vpnonly.app/VPNonly-1.9.24.zip"
+      <enclosure url="https://github.com/kanishkdan/vpnonly/releases/download/v1.9.24/VPNonly-1.9.24.zip"
                  sparkle:edSignature="qD598uaimDpPvHJVK2YBuMRiFY8eMUhRzLo6VZ/NU+CC9Vy1u/hcmHFIkPY4K/6nlXwBUdZ5PT8fZbKWTh9WAg=="
                  length="3404319"
                  type="application/octet-stream" />

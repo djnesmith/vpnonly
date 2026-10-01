@@ -1,5 +1,5 @@
 {
-  "version": "1.9.24",
+  "version": "1.9.25",
   "url": "https://vpnonly.app/",
-  "notes": "VPNonly now says plainly when no app is on the VPN, and warns when AdGuard or a proxy on your Mac would send apps around it."
+  "notes": "An app you switch on now stays where it is in the list, so you see its switch flip, and joins Your apps the next time you open VPNonly."
 }
