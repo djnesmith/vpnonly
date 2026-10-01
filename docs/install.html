@@ -126,8 +126,6 @@
           </div>
     <div class="p-div"></div>
     <div class="p-list">
-      <div class="p-sec" data-sec="mine" hidden>YOUR APPS</div>
-      <div class="p-mine"></div>
       <div class="p-sec">ALL APPS</div>
       <div class="p-all">
         <div class="p-row" data-name="Google Chrome"><img src="img/google-chrome.png" alt=""><div class="p-meta"><div class="p-name">Google Chrome</div><div class="p-sub"></div></div><button class="sw" type="button" role="switch" aria-checked="false" aria-label="Google Chrome"></button></div>
@@ -185,15 +183,14 @@
 <script>
 // The popup on this page plays what the app does when you flip a switch,
 // with the app's own wording, so it stays right when the app changes. Text
-// fades across, a switched-on app glides up into Your apps, and the checked
-// addresses ease open; none of it moves for people who turned motion off.
+// fades across and the checked addresses ease open; none of it moves for
+// people who turned motion off.
 (() => {
   const pop = document.getElementById("try-pop");
   if (!pop) return;
   const q = s => pop.querySelector(s);
   const primary = q(".p-primary"), live = q(".p-live"), ips = q(".p-ips");
   const check = q(".p-check"), disconnect = q(".p-btn");
-  const mineSec = q('[data-sec="mine"]'), mine = q(".p-mine");
   const rows = [...pop.querySelectorAll(".p-row")];
   const exit = "NordVPN · Singapore";
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches || !pop.animate;
@@ -232,23 +229,6 @@
         .onfinish = () => { if (el.dataset.on === "false") el.hidden = true; };
     }
   };
-  // Rows slide to where they end up instead of jumping there.
-  const glide = change => {
-    // Only what's on screen now can slide; anything appearing fades in.
-    const moving = [...pop.querySelectorAll(".p-row, .p-sec")].filter(el => !el.hidden);
-    const before = new Map(moving.map(el => [el, el.getBoundingClientRect().top]));
-    change();
-    if (still) return;
-    pop.querySelectorAll(".p-sec").forEach(el => {
-      if (!el.hidden && !before.has(el)) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: ease });
-    });
-    const zoom = parseFloat(getComputedStyle(pop).zoom) || 1;
-    for (const [el, top] of before) {
-      const dy = (top - el.getBoundingClientRect().top) / zoom;
-      if (Math.abs(dy) > .5) el.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 360, easing: ease });
-    }
-  };
-
   const on = new Set();
   let up = false, busy = false, checked = false;
   const label = () => on.size === 1 ? [...on][0] : on.size + " apps";
@@ -283,8 +263,8 @@
       checked = false;
       if (!on.has(name)) {
         sw.classList.add("on"); sw.setAttribute("aria-checked", "true");
-        // A switched-on app is pinned under Your apps, and stays there.
-        if (r.parentNode !== mine) glide(() => { mine.appendChild(r); mineSec.hidden = false; });
+        // It stays where it is, as in the app: an app you switch on joins
+        // Your apps the next time the popup opens, not under your pointer.
         sub.classList.remove("ok"); swap(sub, "joining the VPN…");
         await play(["Closing " + name + "…"].concat(up ? [] : ["Connecting to " + exit + "…"], ["Moving " + name + " into the VPN…"]));
         up = true; on.add(name);
