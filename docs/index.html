@@ -437,55 +437,78 @@
     const r = el.getBoundingClientRect(), f = fc.getBoundingClientRect();
     return { x: r.left - f.left, y: r.top - f.top, w: r.width, h: r.height };
   };
+  // Each wire keeps its path and its moving dots, so flipping a switch only
+  // restyles that one wire: its colour fades across and its dots fade in,
+  // instead of the whole drawing being thrown away and redrawn.
+  let wires = [];
+  const pulses = (w, kind, dots, dur) => {
+    w.dots.forEach(c => c.remove());
+    w.dots = [];
+    if (still) return;
+    for (let k = 0; k < dots; k++) {
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("r", kind === "vpn" ? 3.2 : 2.4);
+      c.setAttribute("class", "pulse " + kind);
+      const m = document.createElementNS(NS, "animateMotion");
+      m.setAttribute("dur", dur + "s");
+      m.setAttribute("repeatCount", "indefinite");
+      m.setAttribute("begin", (-k * dur / dots).toFixed(2) + "s");
+      const mp = document.createElementNS(NS, "mpath");
+      mp.setAttribute("href", "#" + w.path.id);
+      mp.setAttributeNS(XL, "xlink:href", "#" + w.path.id);
+      m.appendChild(mp);
+      c.appendChild(m);
+      svg.appendChild(c);
+      w.dots.push(c);
+    }
+  };
+  const style = (w, kind, dots, dur) => {
+    if (w.kind === kind) return;
+    w.kind = kind;
+    w.path.setAttribute("class", "wire " + kind);
+    pulses(w, kind, dots, dur);
+  };
+  const restyle = () => {
+    const idle = !apps.some(isOn);
+    fc.classList.toggle("idle", idle);
+    apps.forEach((el, i) => {
+      const on = isOn(el);
+      style(wires[i], on ? "vpn" : "home", on ? 2 : 1, on ? 1.6 : 2.6);
+    });
+    outs.forEach(([, kind, dots, dur], j) => {
+      const w = wires[apps.length + j];
+      if (kind === "vpn" && idle) style(w, "idle", 0, dur);
+      else style(w, kind, dots, dur);
+    });
+  };
   const draw = () => {
     const f = fc.getBoundingClientRect();
     svg.setAttribute("viewBox", "0 0 " + f.width + " " + f.height);
     svg.textContent = "";
+    wires = [];
     const down = getComputedStyle(fc).getPropertyValue("--fc-dir").trim() === "column";
     const H = box(hub);
     const curve = (a, b) => down
       ? "M" + a[0] + " " + a[1] + "C" + a[0] + " " + (a[1] + b[1]) / 2 + " " + b[0] + " " + (a[1] + b[1]) / 2 + " " + b[0] + " " + b[1]
       : "M" + a[0] + " " + a[1] + "C" + (a[0] + b[0]) / 2 + " " + a[1] + " " + (a[0] + b[0]) / 2 + " " + b[1] + " " + b[0] + " " + b[1];
-    let n = 0;
-    const wire = (a, b, kind, dots, dur) => {
+    const wire = (a, b) => {
       const p = document.createElementNS(NS, "path");
       p.setAttribute("d", curve(a, b));
-      p.setAttribute("class", "wire " + kind);
-      p.id = "fcw" + n++;
+      p.id = "fcw" + wires.length;
       svg.appendChild(p);
-      if (still) return;
-      for (let k = 0; k < dots; k++) {
-        const c = document.createElementNS(NS, "circle");
-        c.setAttribute("r", kind === "vpn" ? 3.2 : 2.4);
-        c.setAttribute("class", "pulse " + kind);
-        const m = document.createElementNS(NS, "animateMotion");
-        m.setAttribute("dur", dur + "s");
-        m.setAttribute("repeatCount", "indefinite");
-        m.setAttribute("begin", (-k * dur / dots).toFixed(2) + "s");
-        const mp = document.createElementNS(NS, "mpath");
-        mp.setAttribute("href", "#" + p.id);
-        mp.setAttributeNS(XL, "xlink:href", "#" + p.id);
-        m.appendChild(mp);
-        c.appendChild(m);
-        svg.appendChild(c);
-      }
+      wires.push({ path: p, dots: [], kind: null });
     };
     apps.forEach((el, i) => {
       const A = box(el), off = (i - (apps.length - 1) / 2) * (down ? 10 : 9);
-      const from = down ? [A.x + A.w / 2, A.y + A.h] : [A.x + A.w, A.y + A.h / 2];
-      const to = down ? [H.x + H.w / 2 + off, H.y] : [H.x, H.y + H.h / 2 + off];
-      const on = isOn(el);
-      wire(from, to, on ? "vpn" : "home", on ? 2 : 1, on ? 1.6 : 2.6);
+      wire(down ? [A.x + A.w / 2, A.y + A.h] : [A.x + A.w, A.y + A.h / 2],
+           down ? [H.x + H.w / 2 + off, H.y] : [H.x, H.y + H.h / 2 + off]);
     });
-    const idle = !apps.some(isOn);
-    fc.classList.toggle("idle", idle);
-    outs.forEach(([el, kind, dots, dur], i) => {
+    outs.forEach(([el], i) => {
       const D = box(el), off = i ? 12 : -12;
-      const from = down ? [H.x + H.w / 2 + off, H.y + H.h] : [H.x + H.w, H.y + H.h / 2 + off];
-      const to = down ? [D.x + D.w / 2, D.y] : [D.x, D.y + D.h / 2];
-      if (kind === "vpn" && idle) wire(from, to, "idle", 0, dur);
-      else wire(from, to, kind, dots, dur);
+      wire(down ? [H.x + H.w / 2 + off, H.y + H.h] : [H.x + H.w, H.y + H.h / 2 + off],
+           down ? [D.x + D.w / 2, D.y] : [D.x, D.y + D.h / 2]);
     });
+    restyle();
   };
   draw();
 
@@ -509,7 +532,7 @@
       el.classList.toggle("on", on);
       el.setAttribute("aria-checked", on ? "true" : "false");
       el.querySelector(".sw").classList.toggle("on", on);
-      draw();
+      restyle();
       describe();
     };
     el.addEventListener("click", flip);
