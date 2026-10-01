@@ -223,10 +223,13 @@ details.qsec summary h2 { display: inline; margin: 0; font-size: 21px; }
 details.qsec[open] summary { margin-bottom: 10px; }
 details.qsec:not([open]) { padding-bottom: 18px; }
 
-figure.demo { margin: 26px 0 30px; }
-figure.demo .shot { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #000; }
-figure.demo video { width: 100%; height: auto; }
-figure.demo figcaption { margin-top: 10px; font-size: 15px; color: var(--muted); }
+/* the install page's popup you can try, in place of a walkthrough video */
+figure.trypop { margin: 26px 0 30px; display: grid; justify-items: center; gap: 12px; }
+.trypop .sw { border: 0; padding: 0; cursor: pointer; }
+.trypop .p-check { background: none; border: 0; padding: 0; font: 500 10.5px/1.25 var(--sans); color: var(--mac-blue); cursor: pointer; }
+.trypop .sw:focus-visible, .trypop .p-check:focus-visible { outline: 2px solid var(--mac-blue); outline-offset: 2px; }
+.trypop .p-btn[hidden] { display: none; }
+.trypop figcaption { max-width: 520px; font-size: 15px; color: var(--muted); text-align: center; }
 
 .ownerbar { background: var(--soft); border-radius: 10px; padding: 14px 16px; font-size: 16px !important; }
 

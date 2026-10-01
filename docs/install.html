@@ -68,16 +68,6 @@
 
 <p class="ownerbar">Already have a licence, or lost your download? <a href="download.html">Get the latest version here</a> — your key still works, and there's nothing to buy again.</p>
 
-<section id="walkthrough" aria-labelledby="walkthrough-title">
-<h2 id="walkthrough-title">Watch the full walkthrough</h2>
-<figure class="demo">
-  <div class="shot">
-    <video src="demo.mp4" poster="demo-poster.jpg" width="1658" height="1080" aria-label="Full VPNonly purchase and setup walkthrough" controls preload="none" playsinline></video>
-  </div>
-  <figcaption>2 min 24 sec · Purchase, installation, and your first connection.</figcaption>
-</figure>
-</section>
-
 <h2>1. Move it to Applications</h2>
 <p><a href="download.html">Download VPNonly</a>, unzip it, and drag <strong>VPNonly.app</strong> into your Applications folder.</p>
 
@@ -102,6 +92,52 @@
 <h2>7. Flip a switch</h2>
 <p>Every app on your Mac is in the list. Turn one on and it joins the VPN. Turn it off and it's back on your normal connection. Everything you didn't pick is untouched throughout.</p>
 <p>An app has to relaunch to join the tunnel, because macOS fixes how an app connects at the moment it opens. VPNonly asks first, then quits it the way ⌘Q does and reopens it on the VPN, and Chrome and other Chromium browsers come back with their tabs. While the app stays open, switching it in and out is instant.</p>
+
+<figure class="trypop">
+  <!-- The popup right after setup, in the app's own wording. Flip a switch
+       and it plays what the app does; nothing here talks to a network. -->
+  <div class="pop" id="try-pop">
+    <div class="p-status">
+      <span class="p-dot"></span>
+      <div class="p-st" aria-live="polite">
+        <div class="p-label">VPN status</div>
+        <div class="p-primary">No apps on the VPN yet</div>
+        <div class="p-live">Switch on an app below. The rest of your Mac stays on its normal connection.</div>
+        <div class="p-ips" hidden><span>VPN IP</span><span>203.0.113.24</span><span>This Mac</span><span>198.51.100.7</span></div>
+      </div>
+      <div class="p-side">
+        <span class="p-btn" hidden>Disconnect</span>
+        <button class="p-check" type="button" hidden>Check</button>
+      </div>
+    </div>
+    <div class="p-search">
+            <svg viewBox="0 0 12 12"><circle cx="5.1" cy="5.1" r="3.7" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7.9 7.9l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <span>Search apps…</span>
+          </div>
+    <div class="p-div"></div>
+    <div class="p-list">
+      <div class="p-sec" data-sec="mine" hidden>YOUR APPS</div>
+      <div class="p-mine"></div>
+      <div class="p-sec">ALL APPS</div>
+      <div class="p-all">
+        <div class="p-row" data-name="Google Chrome"><img src="img/google-chrome.png" alt=""><div class="p-meta"><div class="p-name">Google Chrome</div><div class="p-sub"></div></div><button class="sw" type="button" role="switch" aria-checked="false" aria-label="Google Chrome"></button></div>
+        <div class="p-row" data-name="CapCut"><img src="img/capcut.png" alt=""><div class="p-meta"><div class="p-name">CapCut</div><div class="p-sub"></div></div><button class="sw" type="button" role="switch" aria-checked="false" aria-label="CapCut"></button></div>
+        <div class="p-row" data-name="Slack"><img src="img/slack.png" alt=""><div class="p-meta"><div class="p-name">Slack</div><div class="p-sub"></div></div><button class="sw" type="button" role="switch" aria-checked="false" aria-label="Slack"></button></div>
+        <div class="p-row" data-name="Spotify"><img src="img/spotify.png" alt=""><div class="p-meta"><div class="p-name">Spotify</div><div class="p-sub"></div></div><button class="sw" type="button" role="switch" aria-checked="false" aria-label="Spotify"></button></div>
+        <div class="p-row" data-name="WhatsApp"><img src="img/whatsapp.png" alt=""><div class="p-meta"><div class="p-name">WhatsApp</div><div class="p-sub"></div></div><button class="sw" type="button" role="switch" aria-checked="false" aria-label="WhatsApp"></button></div>
+      </div>
+    </div>
+    <div class="p-div"></div>
+    <div class="p-foot">
+            <span class="p-menu"><svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.8" fill="none" stroke="currentColor" stroke-width="1.1"/><ellipse cx="7" cy="7" rx="2.6" ry="5.8" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M1.4 5h11.2M1.4 9h11.2" stroke="currentColor" stroke-width="1.1"/></svg>NordVPN · Singapore<svg class="chev" viewBox="0 0 8 6"><path d="M1.2 1.6L4 4.4l2.8-2.8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="p-tools">
+              <svg viewBox="0 0 14 12"><rect x="1" y="1" width="12" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M1 4h12" stroke="currentColor" stroke-width="1.1"/></svg>
+              <svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.9" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="4.3" cy="7" r=".95" fill="currentColor"/><circle cx="7" cy="7" r=".95" fill="currentColor"/><circle cx="9.7" cy="7" r=".95" fill="currentColor"/></svg>
+            </span>
+          </div>
+  </div>
+  <figcaption>Try it: this is the popup right after setup. Switch Google Chrome on, then click Check. The addresses are examples.</figcaption>
+</figure>
 
 <h2>The admin password</h2>
 <p>The first time you put an app in the VPN, VPNonly asks for your admin password. Creating a network interface and firewall rules needs root, which is true of every VPN client. A later security-sensitive engine upgrade can ask again.</p>
@@ -136,5 +172,78 @@
   <span><b>VPNonly</b> · $19 once, for Mac</span>
   <a class="btn" href="https://dodo.pe/get-vpnonly" data-goatcounter-click="buy-bar-install">Get it</a>
 </div>
+<script>
+// The popup on this page plays what the app does when you flip a switch,
+// with the app's own wording, so it stays right when the app changes.
+(() => {
+  const pop = document.getElementById("try-pop");
+  if (!pop) return;
+  const q = s => pop.querySelector(s);
+  const primary = q(".p-primary"), live = q(".p-live"), ips = q(".p-ips");
+  const check = q(".p-check"), disconnect = q(".p-btn");
+  const mineSec = q('[data-sec="mine"]'), mine = q(".p-mine");
+  const rows = [...pop.querySelectorAll(".p-row")];
+  const exit = "NordVPN · Singapore";
+  const step = matchMedia("(prefers-reduced-motion: reduce)").matches ? 350 : 900;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const on = new Set();
+  let up = false, busy = false, checked = false;
+  const label = () => on.size === 1 ? [...on][0] : on.size + " apps";
+  const verb = () => on.size === 1 ? " is" : " are";
+  const say = (a, b) => { primary.textContent = a; live.textContent = b || ""; };
+  const settle = () => {
+    pop.toggleAttribute("data-busy", busy);
+    pop.toggleAttribute("data-up", !busy && up && on.size > 0);
+    check.hidden = disconnect.hidden = !up;
+    ips.hidden = busy || !checked;
+    if (busy) return;
+    if (!on.size) say("No apps on the VPN yet", up
+      ? "Connected to " + exit + ". Switch on an app below to use it."
+      : "Switch on an app below. The rest of your Mac stays on its normal connection.");
+    else if (checked) say(label() + verb() + " on the VPN", "Verified just now · " + exit);
+    else say(label() + verb() + " protected", "Use Check any time to verify the public exit");
+    rows.forEach(r => {
+      const sub = r.querySelector(".p-sub"), live = on.has(r.dataset.name);
+      sub.textContent = live ? "in VPN · " + exit : "";
+      sub.classList.toggle("ok", live);
+    });
+  };
+  const play = async lines => {
+    busy = true; settle();
+    for (const line of lines) { say(line); await wait(step); }
+    busy = false;
+  };
+  rows.forEach(r => {
+    const sw = r.querySelector(".sw"), name = r.dataset.name, sub = r.querySelector(".p-sub");
+    sw.addEventListener("click", async () => {
+      if (busy) return;
+      checked = false;
+      if (!on.has(name)) {
+        sw.classList.add("on"); sw.setAttribute("aria-checked", "true");
+        // A switched-on app is pinned under Your apps, and stays there.
+        if (r.parentNode !== mine) { mine.appendChild(r); mineSec.hidden = false; }
+        sub.textContent = "joining the VPN…"; sub.classList.remove("ok");
+        await play(["Closing " + name + "…"].concat(up ? [] : ["Connecting to " + exit + "…"], ["Moving " + name + " into the VPN…"]));
+        up = true; on.add(name);
+      } else {
+        sw.classList.remove("on"); sw.setAttribute("aria-checked", "false");
+        await play(["Taking " + name + " out of the VPN…"].concat(on.size === 1 ? ["Disconnecting…"] : []));
+        on.delete(name);
+        if (!on.size) up = false;
+      }
+      settle();
+    });
+  });
+  check.addEventListener("click", async () => {
+    if (busy || !on.size) return;
+    check.textContent = "Checking…";
+    say("Checking " + label() + "…", "Use Check any time to verify the public exit");
+    await wait(step * 1.4);
+    check.textContent = "Check";
+    checked = true;
+    settle();
+  });
+})();
+</script>
 </body>
 </html>
