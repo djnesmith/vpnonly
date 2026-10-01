@@ -83,7 +83,7 @@
 <p>Nothing else on the Mac changes. Your browser, your calls and every other app keep using your normal connection.</p>
 
 <h2>When the tunnel drops</h2>
-<p>The torrent app is blocked until the tunnel is back. It never quietly falls back to your normal connection, so there's no interface to bind and no separate kill switch to remember. VPNonly reconnects the tunnel on its own after a network change, and the torrent app picks its peers back up by itself.</p>
+<p>The torrent app is cut off from the internet until the tunnel is back. It never quietly falls back to your normal connection, so there's no interface to bind and no separate kill switch to remember. VPNonly reconnects the tunnel on its own after a network change, and the torrent app picks its peers back up by itself.</p>
 
 <h2>Worth knowing</h2>
 <ul>
@@ -91,6 +91,7 @@
   <li><strong>DNS.</strong> Connections are tunneled, but DNS lookups still go through your normal resolver. Your ISP can see which tracker names the app looks up, though not the traffic itself.</li>
   <li><strong>Port forwarding.</strong> VPNonly doesn't set up port forwarding. Without a forwarded port, other peers can't start connections to you. Downloading works normally; seeding tends to be slower.</li>
   <li><strong>Switching.</strong> Moving the app in or out of the VPN drops its open connections. It reconnects to peers on its own, so it's fine to do mid-download.</li>
+  <li><strong>Your own network.</strong> Allow Local Network in the ⋯ menu is on unless you turn it off, so the torrent app can also reach devices on the network your Mac is on. It reaches your router only on ports 53, 80 and 443, for DNS and its settings page, which on most routers keeps UPnP and NAT-PMP port mapping out of reach. Local peer discovery stays blocked, so it doesn't announce itself to other machines on the Wi-Fi.</li>
 </ul>
 
 <h2>On the rules</h2>

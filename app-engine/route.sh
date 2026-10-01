@@ -1,5 +1,5 @@
 #!/bin/bash
-# usage: route.sh <user> [--blocks-only] [group ...]
+# usage: route.sh <user> [--blocks-only] [--local-network] [group ...]
 #
 # Replaces VPNonly's private PF anchor with the complete desired state. The
 # macOS main ruleset already evaluates com.apple/* anchors; keeping every
@@ -12,6 +12,9 @@ export LC_ALL
 
 PFCTL=/sbin/pfctl
 IFCONFIG=/sbin/ifconfig
+IPCONFIG=/usr/sbin/ipconfig
+ROUTE=/sbin/route
+SCUTIL=/usr/sbin/scutil
 PS=/bin/ps
 STAT=/usr/bin/stat
 GREP=/usr/bin/grep
@@ -26,7 +29,7 @@ STATE_ROOT=/var/run/vpnonly
 die() { echo "ROUTE_ERROR: $*" >&2; exit 6; }
 
 [ "$(/usr/bin/id -u)" = 0 ] || die "must run as root"
-RUSER="${1:?usage: route.sh <user> [--blocks-only] [group ...]}"; shift || true
+RUSER="${1:?usage: route.sh <user> [--blocks-only] [--local-network] [group ...]}"; shift || true
 case "$RUSER" in
     ""|root|*[!A-Za-z0-9._-]*) die "invalid user" ;;
 esac
@@ -35,10 +38,15 @@ if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ] && [ "$RUSER" != "$SUDO_U
 fi
 
 BLOCKS_ONLY=0
-if [ "${1:-}" = "--blocks-only" ]; then
-    BLOCKS_ONLY=1
-    shift
-fi
+LOCAL_NETWORK=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --blocks-only) BLOCKS_ONLY=1; shift ;;
+        --local-network) LOCAL_NETWORK=1; shift ;;
+        --*) die "unknown option" ;;
+        *) break ;;
+    esac
+done
 
 # These directories hold only root-owned runtime state. Never put PF files,
 # process IDs, or enable tokens in the user's writable config directory.
@@ -125,8 +133,8 @@ cleanup() {
     if [ "$ANCHOR_COMMITTED" -eq 1 ] && [ "$POLICY_COMPLETE" -eq 0 ] &&
        [ -n "$PREVIOUS_PFCONF" ] && [ -f "$PREVIOUS_PFCONF" ] &&
        [ ! -L "$PREVIOUS_PFCONF" ]; then
-        if $PFCTL -n -a "$ANCHOR" -f "$PREVIOUS_PFCONF" >/dev/null 2>&1 &&
-           $PFCTL -q -a "$ANCHOR" -f "$PREVIOUS_PFCONF"; then
+        if $PFCTL -o none -n -a "$ANCHOR" -f "$PREVIOUS_PFCONF" >/dev/null 2>&1 &&
+           $PFCTL -o none -q -a "$ANCHOR" -f "$PREVIOUS_PFCONF"; then
             echo "ROUTE_WARNING: restored the previous VPNonly policy after an incomplete update" >&2
         else
             echo "ROUTE_CRITICAL: could not restore the previous VPNonly policy" >&2
@@ -225,6 +233,119 @@ if [ "$TUNNEL_STATE_PRESENT" -eq 1 ] &&
     fi
 fi
 
+# Local network access: the app's Allow Local Network setting, off unless the
+# user turns it on. It covers only private IPv4 networks this Mac is on right
+# now, each as a pair of the Mac's own address there and the network.
+#   - Private only. VPNonly never takes the default route, so a public network
+#     on an interface (a Mac given a public address directly) must not let
+#     public destinations skip the tunnel.
+#   - From the Mac's own address. When the Mac leaves a network that address
+#     goes with it, so the pair stops matching at once instead of sending a
+#     private address that is no longer local out through the default route.
+#   - No wider than /16. A "local" /8 is far more likely a hostile network than
+#     a home one, and would swallow VPN-internal private addresses.
+#   - The router itself only for DNS and its web pages. Everything else it
+#     serves (UPnP control, NAT-PMP, PCP, TR-064) could open a port on the
+#     Mac's real public address and tell the app what it is.
+# Link-local addresses (from the Mac's own link-local address) and link-local
+# multicast (224.0.0.0/24, which carries mDNS) are fixed entries: neither can
+# leave the local link. SSDP (239.255.255.250), torrent local peer discovery
+# and limited broadcast stay out on purpose.
+LOCAL_PAIRS=()     # "ADDR NET": the Mac's address on a network, and the network
+NLOCAL=0
+LOCAL_ROUTERS=()   # "ADDR GW": that address, and a router on that network
+NROUTERS=0
+LOCAL_NETS=()
+NNETS=0
+LOCAL_GWS=()
+NGWS=0
+# Backstop for the app's own check: a system proxy on the local network would
+# carry a routed app's traffic around the tunnel, so there is no local access
+# while one is set, or while the proxy settings can't be read. scutil prints
+# a line of text instead of a dictionary, and still exits 0, when it has none.
+if [ "$LOCAL_NETWORK" -eq 1 ]; then
+    proxy_conf=$($SCUTIL --proxy 2>/dev/null </dev/null) || proxy_conf=""
+    case "$proxy_conf" in
+        "<dictionary> {"*) proxy_readable=1 ;;
+        *) proxy_readable=0 ;;
+    esac
+    if [ "$proxy_readable" -eq 0 ] ||
+       $GREP -Eq '^[[:space:]]*(HTTPEnable|HTTPSEnable|SOCKSEnable|ProxyAutoConfigEnable|ProxyAutoDiscoveryEnable) : 1$' <<< "$proxy_conf"; then
+        LOCAL_NETWORK=0
+        echo "ROUTE_WARNING: local network access held back while a system proxy is set" >&2
+    fi
+fi
+if [ "$LOCAL_NETWORK" -eq 1 ]; then
+    while read -r ifname addr mask; do
+        case "$ifname" in ""|*[!a-z0-9]*) continue ;; esac
+        valid_ipv4 "$addr" || continue
+        case "$mask" in
+            0x[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;;
+            *) continue ;;
+        esac
+        m=$((16#${mask#0x}))
+        prefix=0
+        while [ "$prefix" -lt 32 ] && [ $(( (m >> (31 - prefix)) & 1 )) -eq 1 ]; do
+            prefix=$((prefix + 1))
+        done
+        # A contiguous mask, /16 or narrower.
+        [ "$prefix" -ge 16 ] || continue
+        [ "$m" -eq $(( (0xFFFFFFFF << (32 - prefix)) & 0xFFFFFFFF )) ] || continue
+        IFS=. read -r a b c d <<< "$addr"
+        net=$(( ((a << 24) | (b << 16) | (c << 8) | d) & m ))
+        n1=$(( (net >> 24) & 255 )); n2=$(( (net >> 16) & 255 ))
+        # Inside a private block; at /16 or narrower a network can't straddle
+        # one. Link-local networks are covered by the fixed entry.
+        if [ "$n1" -eq 10 ]; then :
+        elif [ "$n1" -eq 172 ] && [ "$n2" -ge 16 ] && [ "$n2" -le 31 ]; then :
+        elif [ "$n1" -eq 192 ] && [ "$n2" -eq 168 ]; then :
+        else continue
+        fi
+        cidr="$n1.$n2.$(( (net >> 8) & 255 )).$(( net & 255 ))/$prefix"
+        pair="$addr $cidr"
+        dup=0
+        if [ "$NLOCAL" -gt 0 ]; then
+            for seen in "${LOCAL_PAIRS[@]}"; do [ "$seen" = "$pair" ] && dup=1; done
+        fi
+        [ "$dup" -eq 0 ] || continue
+        [ "$NLOCAL" -lt 16 ] || break
+        LOCAL_PAIRS[$NLOCAL]="$pair"
+        NLOCAL=$((NLOCAL + 1))
+        dup=0
+        if [ "$NNETS" -gt 0 ]; then
+            for seen in "${LOCAL_NETS[@]}"; do [ "$seen" = "$cidr" ] && dup=1; done
+        fi
+        if [ "$dup" -eq 0 ]; then LOCAL_NETS[$NNETS]="$cidr"; NNETS=$((NNETS + 1)); fi
+        # This network's routers: the one DHCP named and the one the routing
+        # table uses, which can differ (classless static routes). Each one
+        # inside the network is locked down below.
+        gw_dhcp=$($IPCONFIG getoption "$ifname" router 2>/dev/null </dev/null) || gw_dhcp=""
+        gw_table=$($ROUTE -n get -ifscope "$ifname" default 2>/dev/null </dev/null |
+            $AWK '$1 == "gateway:" { print $2; exit }') || gw_table=""
+        for gw in "$gw_dhcp" "$gw_table"; do
+            valid_ipv4 "$gw" || continue
+            IFS=. read -r a b c d <<< "$gw"
+            [ $(( ((a << 24) | (b << 16) | (c << 8) | d) & m )) -eq "$net" ] || continue
+            route_pair="$addr $gw"
+            dup=0
+            if [ "$NROUTERS" -gt 0 ]; then
+                for seen in "${LOCAL_ROUTERS[@]}"; do [ "$seen" = "$route_pair" ] && dup=1; done
+            fi
+            if [ "$dup" -eq 0 ]; then
+                LOCAL_ROUTERS[$NROUTERS]="$route_pair"
+                NROUTERS=$((NROUTERS + 1))
+            fi
+            dup=0
+            if [ "$NGWS" -gt 0 ]; then
+                for seen in "${LOCAL_GWS[@]}"; do [ "$seen" = "$gw" ] && dup=1; done
+            fi
+            if [ "$dup" -eq 0 ]; then LOCAL_GWS[$NGWS]="$gw"; NGWS=$((NGWS + 1)); fi
+        done
+    done < <($IFCONFIG -a 2>/dev/null | $AWK '
+        /^[^[:space:]]/ { split($1, n, ":"); ifname = n[1] }
+        $1 == "inet" && $3 == "netmask" && ifname ~ /^(en|bridge)[0-9]+$/ { print ifname, $2, $4 }')
+fi
+
 ROUTE_THROUGH=0
 if [ "$BLOCKS_ONLY" -eq 0 ] && [ "$OWNED_TUNNEL" -eq 1 ] && [ "$NVPNG" -gt 0 ]; then
     ROUTE_THROUGH=1
@@ -258,6 +379,44 @@ PFCONF=$(/usr/bin/mktemp /var/run/vpnonly-pf.XXXXXX) || die "cannot create PF ru
 # servers enforcing cryptokey routing were silently dropping everything.
 if [ "$NVPNG" -gt 0 ]; then
     for group in "${ROUTE_GROUPS[@]}"; do
+        if [ "$LOCAL_NETWORK" -eq 1 ]; then
+            # First, so local destinations take the normal route, tunnel or no
+            # tunnel; none of them can leave the local network. The routers
+            # come first of all: DNS and their web pages, then nothing else.
+            if [ "$NROUTERS" -gt 0 ]; then
+                for pair in "${LOCAL_ROUTERS[@]}"; do
+                    read -r p_addr p_gw <<< "$pair"
+                    printf 'pass out quick on ! lo0 inet proto { tcp udp } from %s to %s port { 53 80 443 } group %s keep state\n' \
+                        "$p_addr" "$p_gw" "$group" >> "$PFCONF"
+                done
+            fi
+            if [ "$NGWS" -gt 0 ]; then
+                for g in "${LOCAL_GWS[@]}"; do
+                    printf 'block return out quick on ! lo0 inet from any to %s group %s\n' \
+                        "$g" "$group" >> "$PFCONF"
+                done
+            fi
+            # Port mapping and SSDP on any other local device too.
+            for n in ${LOCAL_NETS[@]+"${LOCAL_NETS[@]}"} 169.254.0.0/16 224.0.0.0/24; do
+                printf 'block return out quick on ! lo0 inet proto { tcp udp } from any to %s port { 1900 5351 } group %s\n' \
+                    "$n" "$group" >> "$PFCONF"
+            done
+            if [ "$NLOCAL" -gt 0 ]; then
+                for pair in "${LOCAL_PAIRS[@]}"; do
+                    read -r p_addr p_net <<< "$pair"
+                    printf 'pass out quick on ! lo0 inet proto { tcp udp } from %s to %s group %s keep state\n' \
+                        "$p_addr" "$p_net" "$group" >> "$PFCONF"
+                done
+            fi
+            # Link-local only from a link-local address of the Mac's own, so a
+            # router's link-local alias can't stand in for its locked-down
+            # address. Link-local multicast from any address: it never leaves
+            # the link.
+            printf 'pass out quick on ! lo0 inet proto { tcp udp } from 169.254.0.0/16 to 169.254.0.0/16 group %s keep state\n' \
+                "$group" >> "$PFCONF"
+            printf 'pass out quick on ! lo0 inet proto { tcp udp } from any to 224.0.0.0/24 group %s keep state\n' \
+                "$group" >> "$PFCONF"
+        fi
         if [ "$ROUTE_THROUGH" -eq 1 ]; then
             # The pass must precede the quick fallback block. Both match the group;
             # a valid owned tunnel takes the route-to rule, while every block-only
@@ -281,7 +440,10 @@ fi
 # A scoped full-ruleset load replaces both translation and filter rules in this
 # one anchor. In particular, loading the empty file clears stale NAT too;
 # -F rules alone would clear only filters, while -F all risks global state.
-$PFCTL -n -a "$ANCHOR" -f "$PFCONF" >/dev/null 2>&1 || die "generated anchor failed validation"
+# The optimizer stays off (-o none) on every load and check: it would turn a
+# long address list into an automatic table that the rules snapshot below
+# names but cannot carry, so a rollback would not restore the same policy.
+$PFCTL -o none -n -a "$ANCHOR" -f "$PFCONF" >/dev/null 2>&1 || die "generated anchor failed validation"
 
 # Keep a parseable copy of the active child before replacing it. Every error
 # after the scoped commit rolls this exact policy back, so a caller restoring
@@ -292,7 +454,7 @@ $PFCTL -a "$ANCHOR" -s nat > "$PREVIOUS_PFCONF" 2>/dev/null ||
     die "cannot snapshot the existing VPNonly translations"
 $PFCTL -a "$ANCHOR" -s rules >> "$PREVIOUS_PFCONF" 2>/dev/null ||
     die "cannot snapshot the existing VPNonly rules"
-$PFCTL -n -a "$ANCHOR" -f "$PREVIOUS_PFCONF" >/dev/null 2>&1 ||
+$PFCTL -o none -n -a "$ANCHOR" -f "$PREVIOUS_PFCONF" >/dev/null 2>&1 ||
     die "the existing VPNonly policy could not be preserved"
 
 # Read the previous declaration before changing the kernel so an unsafe state
@@ -405,7 +567,7 @@ if [ -e "$PENDING_TOKEN" ] || [ -L "$PENDING_TOKEN" ]; then
     fi
 fi
 
-if ! $PFCTL -q -a "$ANCHOR" -f "$PFCONF"; then
+if ! $PFCTL -o none -q -a "$ANCHOR" -f "$PFCONF"; then
     die "could not load VPNonly PF anchor"
 fi
 ANCHOR_COMMITTED=1
@@ -513,6 +675,73 @@ elif [ "$REMOVED" -eq 1 ] && [ "$OWNED_TUNNEL" -eq 1 ]; then
         echo "ROUTE_WARNING: old connections may take a moment to close" >&2
 fi
 
+# Local destinations no longer allowed (the setting was turned off, or the Mac
+# left that network) lose their open connections now; otherwise existing
+# states would carry on outside the tunnel until the app closed them. What was
+# allowed comes from the snapshot of the live anchor taken just before the
+# swap, so it is what the kernel was actually enforcing. pfctl -k can't tell
+# VPNonly's states from another stateful PF policy's, so those connections
+# between the same two addresses are reset too, and reconnect.
+if [ -n "$PREVIOUS_PFCONF" ] && [ -f "$PREVIOUS_PFCONF" ]; then
+    now_allowed=""
+    if [ "$NVPNG" -gt 0 ] && [ "$LOCAL_NETWORK" -eq 1 ]; then
+        now_allowed="|169.254.0.0/16 169.254.0.0/16||any 224.0.0.0/24|"
+        if [ "$NLOCAL" -gt 0 ]; then
+            for pair in "${LOCAL_PAIRS[@]}"; do
+                read -r p_addr p_net <<< "$pair"
+                # PF lists a /32 network as a bare address.
+                now_allowed="$now_allowed|$p_addr ${p_net%/32}|"
+            done
+        fi
+        if [ "$NROUTERS" -gt 0 ]; then
+            for pair in "${LOCAL_ROUTERS[@]}"; do now_allowed="$now_allowed|$pair|"; done
+        fi
+    fi
+    while read -r was_src was_dst; do
+        [ -n "$was_src" ] || continue
+        case "$now_allowed" in *"|$was_src $was_dst|"*) continue ;; esac
+        case "$was_src" in
+            any)
+                # Only the fixed entries ever passed from any address.
+                case "$was_dst" in 169.254.0.0/16|224.0.0.0/24) ;; *) continue ;; esac
+                was_src=0.0.0.0/0
+                ;;
+            169.254.0.0/16) ;;
+            *) valid_ipv4 "$was_src" || continue ;;
+        esac
+        case "$was_dst" in
+            */1[6-9]|*/2[0-9]|*/3[0-2]) valid_ipv4 "${was_dst%/*}" || continue ;;
+            */*) continue ;;
+            *) valid_ipv4 "$was_dst" || continue ;;
+        esac
+        $PFCTL -k "$was_src" -k "$was_dst" >/dev/null 2>&1 ||
+            echo "ROUTE_WARNING: old local connections may take a moment to close" >&2
+    done < <($AWK '
+        $1 == "pass" && $2 == "out" && $0 !~ /route-to/ {
+            src = ""; dst = ""
+            for (i = 1; i < NF; i++) {
+                if ($i == "from") src = $(i + 1)
+                if ($i == "to") dst = $(i + 1)
+            }
+            if (src != "" && dst != "") print src, dst
+        }' "$PREVIOUS_PFCONF" | /usr/bin/sort -u)
+    # A router that is locked down now but wasn't before (it has just been
+    # found, or the setting was just turned on) can still have connections to
+    # its other services open from when the network pass covered it.
+    if [ "$NVPNG" -gt 0 ] && [ "$NROUTERS" -gt 0 ]; then
+        was_locked=$($AWK '
+            $1 == "block" && $0 !~ / port / {
+                for (i = 1; i < NF; i++) if ($i == "to" && $(i + 1) != "any") print "|" $(i + 1) "|"
+            }' "$PREVIOUS_PFCONF") || was_locked=""
+        for pair in "${LOCAL_ROUTERS[@]}"; do
+            read -r p_addr p_gw <<< "$pair"
+            case "$was_locked" in *"|$p_gw|"*) continue ;; esac
+            $PFCTL -k "$p_addr" -k "$p_gw" >/dev/null 2>&1 ||
+                echo "ROUTE_WARNING: old local connections may take a moment to close" >&2
+        done
+    fi
+fi
+
 if groups_tmp=$(/usr/bin/mktemp "$PF_STATE/.routed-groups.XXXXXX"); then
     if [ "$NVPNG" -gt 0 ]; then
         for group in "${ROUTE_GROUPS[@]}"; do printf '%s\n' "$group" >> "$groups_tmp"; done
@@ -525,7 +754,6 @@ if groups_tmp=$(/usr/bin/mktemp "$PF_STATE/.routed-groups.XXXXXX"); then
 else
     echo "ROUTE_WARNING: active policy could not be recorded" >&2
 fi
-
 if [ "$NVPNG" -eq 0 ]; then
     # Keep the durable PF reference while VPNonly is installed. Releasing the
     # last reference is not atomic with returning success: a TERM/KILL in that
@@ -563,13 +791,17 @@ POLICY_COMPLETE=1
 
 mode=full
 [ "$BLOCKS_ONLY" -eq 1 ] && mode=blocks-only
+# Whether the rules just loaded let the groups reach the local network. The
+# app asked for it, but the proxy backstop above can have held it back.
+local_access=0
+if [ "$NVPNG" -gt 0 ] && [ "$LOCAL_NETWORK" -eq 1 ]; then local_access=1; fi
 {
     if [ "$NVPNG" -eq 0 ]; then
-        echo "ROUTES none tunnel=$OWNED_TUNNEL mode=$mode"
+        echo "ROUTES none tunnel=$OWNED_TUNNEL mode=$mode local=$local_access"
     else
         printf 'ROUTES'
         for group in "${ROUTE_GROUPS[@]}"; do printf ' %s' "$group"; done
-        echo " tunnel=$OWNED_TUNNEL mode=$mode"
+        echo " tunnel=$OWNED_TUNNEL mode=$mode local=$local_access"
     fi
 } || true
 exit 0

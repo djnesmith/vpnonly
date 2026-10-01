@@ -78,15 +78,15 @@
 
 <details class="qsec" open>
 <summary><h2>Does it work with every app?</h2></summary>
-<p>Nearly. The exception is <strong>Safari</strong>, and anything else built on WebKit. Safari doesn't make its own network connections: WebKit hands them to separate system processes that macOS launches independently, so they never carry Safari's identity and the firewall can't match them. Proton VPN's macOS split tunneling has exactly the same limitation, for the same reason.</p>
+<p>Nearly. The exception is <strong>Safari</strong>, and any other browser built on WebKit, like Orion or DuckDuckGo's. VPNonly won't switch them on, and switches off any that were. Safari doesn't make its own network connections: WebKit hands them to separate system processes that macOS launches independently, so they never carry Safari's identity and the firewall can't match them. Proton VPN's macOS split tunneling has exactly the same limitation, for the same reason.</p>
 <p>Chrome, Firefox, Arc, Brave, CapCut, Slack, Discord and ordinary apps all work. If you need a browser on the VPN, use one of those.</p>
 <p>The list shows everything in Applications, including apps that install into a folder of their own there (Adobe&rsquo;s, for example), Utilities, and your own <code>~/Applications</code>. For anything else, use &ldquo;Choose another app&hellip;&rdquo; at the bottom of the list. One honest limit: an app whose real network work happens in background services that macOS starts on its own isn't covered by switching the app on, because those services aren't started by the app. Adobe's Creative Cloud downloads and sync are the clear example: Photoshop, Illustrator and the other suite apps can be switched on, but anything they hand to Creative Cloud's background services stays on your normal connection.</p>
 </details>
 <details class="qsec" open>
 <summary><h2>Does it work with AdGuard or Little Snitch?</h2></summary>
 <p>Little Snitch, yes. It decides whether each connection is allowed, but the app still makes the connection itself, so VPNonly's rules still see it.</p>
-<p><strong>AdGuard for Mac</strong> doesn't mix with it. To filter an app, AdGuard takes over that app's connections and makes them again from its own process. Those connections don't come from the app any more, so they skip the VPN and use your normal connection, even though the app is switched on. Other filters that re-send traffic this way have the same effect.</p>
-<p>The fix is to tell AdGuard to leave the app alone: its settings let you exclude an app from filtering, under Network. If it's a browser, use an ad-blocking extension inside the browser instead. Then check it: click <strong>Check</strong> in the popup, and open a what's-my-IP page such as <a href="https://ipinfo.io/">ipinfo.io</a> in the app itself. Both should show the VPN's address. If the popup passes but the page doesn't, something on the Mac is still re-sending the app's traffic.</p>
+<p><strong>AdGuard for Mac</strong> doesn't mix with it. To filter an app, AdGuard takes over that app's connections and makes them again from its own process. Those connections don't come from the app any more, so they skip the VPN and use your normal connection, even though the app is switched on. Other filters that re-send traffic this way have the same effect, and so does a proxy running on the Mac itself. From 1.9.24, VPNonly notices both and says so in the popup, with what to change.</p>
+<p>The fix is to tell AdGuard to leave the app alone: in AdGuard's settings, under Network, open Applications and untick it. If it's a browser, use an ad-blocking extension inside the browser instead. Then check it: click <strong>Check</strong> in the popup, and open a what's-my-IP page such as <a href="https://ipinfo.io/">ipinfo.io</a> in the app itself. Both should show the VPN's address. If the popup passes but the page doesn't, something on the Mac is still re-sending the app's traffic.</p>
 </details>
 
 <details class="qsec" open>
@@ -97,12 +97,26 @@
 
 <details class="qsec" open>
 <summary><h2>Does my app restart every time I toggle it?</h2></summary>
-<p>Not every time, but more than once. macOS fixes how an app connects at the moment it opens, and the firewall matches on that, so an app has to be relaunched to get into the tunnel. While it stays open, switching it in and out is instant and it keeps running. Quit it and open it again yourself and it's outside the tunnel, so VPNonly relaunches it once to put it back. In practice: a restart the first time you add it, and one more whenever you reopen the app from scratch. Open connections do drop when the exit IP changes, but most apps reconnect by themselves. Chrome and other browsers reopen without your tabs; press <kbd>&#8679;&#8984;T</kbd> to bring the last window back, or set the browser to reopen tabs on launch (Chrome: Settings &rarr; On startup &rarr; Continue where you left off). With more than one Chrome profile, choose yours first, then <kbd>&#8679;&#8984;T</kbd>.</p>
+<p>Not every time, but more than once. macOS fixes how an app connects at the moment it opens, and the firewall matches on that, so an app has to be relaunched to get into the tunnel. While it stays open, switching it in and out is instant and it keeps running. Quit it and open it again yourself and it's outside the tunnel, so VPNonly relaunches it once to put it back. In practice: a restart the first time you add it, and one more whenever you reopen the app from scratch. Open connections do drop when the exit IP changes, but most apps reconnect by themselves. VPNonly quits the app the way <kbd>&#8984;Q</kbd> does before it reopens it, so it saves what it was doing, and Chrome, Brave, Vivaldi, Edge, Opera and Helium come back with the tabs they had. If an app won't quit, say it's asking about unsaved changes, its switch stays off.</p>
 </details>
 
 <details class="qsec" open>
 <summary><h2>What happens if the VPN drops?</h2></summary>
-<p>Those apps get blocked until it's back. They never silently fall back to your normal connection.</p>
+<p>Those apps get blocked from the internet until it's back. They never silently fall back to your normal connection. With Allow Local Network on, they can still reach devices on your own network, like your router or printer.</p>
+</details>
+
+<details class="qsec" open>
+<summary><h2>Can apps on the VPN reach my router or printer?</h2></summary>
+<p>Yes. <strong>Allow Local Network</strong> in the ⋯ menu is on unless you turn it off. Apps on the VPN reach the private network your Mac is on over Wi-Fi or Ethernet directly: your router's settings page, a printer, a NAS, or a local dev server. Everything else still goes through the tunnel, including any private address that isn't on your network. Very large networks, bigger than a /16 like some offices use, aren't included.</p>
+<p>A few things stay closed on purpose. Apps on the VPN can reach your router only on ports 53, 80 and 443, which covers DNS and most routers' settings pages, and on most routers keeps them away from UPnP and the other ways an app can ask it to open a port. A settings page on another port, like 8443, stays blocked. Local access also stays off while your Mac uses a proxy, because a proxy on your network could carry an app's traffic around the tunnel.</p>
+<p>Turn it off on networks you don't trust, like public Wi-Fi, because a device there could otherwise receive an app's connections directly. And if your network uses the same addresses as your VPN's own internal services, or as a home network you reach through your own WireGuard server, those addresses go to the local network while this is on.</p>
+</details>
+
+<details class="qsec" open>
+<summary><h2>Will it slow down my internet?</h2></summary>
+<p>Not for the apps you leave alone. They keep your normal connection, untouched. The apps you switch on run at your VPN server's speed, the same as with any VPN.</p>
+<p>The one thing VPNonly turns on for the whole Mac is the firewall built into macOS, which it uses to pick out the apps you chose. Its cost is negligible at home internet speeds.</p>
+<p>If a speed test shows a small difference, run it a few times, because results vary a little from one run to the next. A test in a browser that's on the VPN also measures the VPN server, not your own line.</p>
 </details>
 
 <details class="qsec" open>
@@ -112,7 +126,7 @@
 
 <details class="qsec" open>
 <summary><h2>What's bundled inside, and under what licence?</h2></summary>
-<p>Two unmodified programs from the WireGuard project, run as child processes: <strong>wireguard-go</strong> (MIT) and <strong>wg</strong> from wireguard-tools (GPL-2.0-only). Full notices, versions, upstream source links and a GPL written offer are in <a href="third-party-notices.txt">third-party-notices.txt</a>, also included in the download.</p>
+<p>Two programs from the WireGuard project, run as child processes: <strong>wireguard-go</strong> (MIT), with one small published patch so every provider accepts its packets, and <strong>wg</strong> from wireguard-tools (GPL-2.0-only), unmodified. Full notices, versions, upstream source links and a GPL written offer are in <a href="third-party-notices.txt">third-party-notices.txt</a>, also included in the download.</p>
 <p>VPNonly's own privileged code, the part that runs as root, is MIT and <a href="https://github.com/kanishkdan/vpnonly/tree/main/app-engine">on GitHub</a>. The app also bundles Sparkle for updates; its licence is included in the download. "WireGuard" is a registered trademark of Jason A. Donenfeld. VPNonly isn't affiliated with the WireGuard project or with any VPN provider.</p>
 </details>
 

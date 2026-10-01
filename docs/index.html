@@ -304,29 +304,30 @@
     <h2>How it works</h2>
     <p class="intro">VPNonly sits between your apps and the internet. The apps you switch on go through a WireGuard tunnel, and everything else takes your normal connection, untouched.</p>
 
-    <div class="flowchart" aria-hidden="true">
-      <svg class="wires"></svg>
+    <div class="flowchart">
+      <svg class="wires" aria-hidden="true"></svg>
       <div class="fc-col fc-apps">
-        <div class="fc-app on"><img src="img/google-chrome.png" alt=""><span>Google Chrome</span><i class="sw on"></i></div>
-        <div class="fc-app"><img src="img/capcut.png" alt=""><span>CapCut</span><i class="sw"></i></div>
-        <div class="fc-app"><img src="img/slack.png" alt=""><span>Slack</span><i class="sw"></i></div>
-        <div class="fc-app"><img src="img/spotify.png" alt=""><span>Spotify</span><i class="sw"></i></div>
-        <div class="fc-app"><img src="img/whatsapp.png" alt=""><span>WhatsApp</span><i class="sw"></i></div>
+        <div class="fc-app on" role="switch" aria-checked="true" tabindex="0" aria-label="Google Chrome"><img src="img/google-chrome.png" alt=""><span>Google Chrome</span><i class="sw on"></i></div>
+        <div class="fc-app" role="switch" aria-checked="false" tabindex="0" aria-label="CapCut"><img src="img/capcut.png" alt=""><span>CapCut</span><i class="sw"></i></div>
+        <div class="fc-app" role="switch" aria-checked="false" tabindex="0" aria-label="Slack"><img src="img/slack.png" alt=""><span>Slack</span><i class="sw"></i></div>
+        <div class="fc-app" role="switch" aria-checked="false" tabindex="0" aria-label="Spotify"><img src="img/spotify.png" alt=""><span>Spotify</span><i class="sw"></i></div>
+        <div class="fc-app" role="switch" aria-checked="false" tabindex="0" aria-label="WhatsApp"><img src="img/whatsapp.png" alt=""><span>WhatsApp</span><i class="sw"></i></div>
       </div>
-      <div class="fc-col fc-mid">
+      <div class="fc-col fc-mid" aria-hidden="true">
         <div class="fc-hub"><img src="img/vpnonly.png" alt=""><b>VPNonly</b><span>macOS firewall · WireGuard</span></div>
       </div>
-      <div class="fc-col fc-out">
+      <div class="fc-col fc-out" aria-hidden="true">
         <div class="fc-dest vpn"><span class="fc-k">WireGuard tunnel</span><b>NordVPN · Singapore</b><span class="fc-ip">203.0.113.24</span></div>
         <div class="fc-dest home"><span class="fc-k">Your normal connection</span><b>Home</b><span class="fc-ip">198.51.100.7</span></div>
       </div>
     </div>
-    <p class="vh">Google Chrome is switched on, so VPNonly sends it through the WireGuard tunnel to Singapore. CapCut, Slack, Spotify and WhatsApp are off, so they keep your normal connection at home.</p>
+    <p class="fc-hint">Try it: switch the apps on and off.</p>
+    <p class="vh" id="fc-say" aria-live="polite">Google Chrome is switched on, so VPNonly sends it through the WireGuard tunnel to Singapore. CapCut, Slack, Spotify and WhatsApp are off, so they keep your normal connection at home.</p>
 
     <ol class="steps">
       <li><b>A tunnel nobody uses</b>It opens a WireGuard tunnel that nothing uses by default, so your normal connection is never touched.</li>
       <li><b>The firewall picks who goes in</b>The firewall already built into macOS sends just the apps you picked through that tunnel. An app restarts once when it joins, because macOS fixes how an app connects at the moment it opens.</li>
-      <li><b>Blocked if the tunnel drops</b>If the tunnel goes down, those apps are blocked until it's back. They never quietly fall back to your normal connection.</li>
+      <li><b>Blocked if the tunnel drops</b>If the tunnel goes down, those apps are cut off from the internet until it's back. They never quietly fall back to your normal connection.</li>
     </ol>
     <p class="more"><a href="how-it-works.html">The longer version, with the actual rules</a></p>
   </div>
@@ -353,7 +354,7 @@
       <h2>What it can't do yet</h2>
       <ul class="limits">
         <li>Apple Silicon Macs only.</li>
-        <li>Safari can't be routed. WebKit hands its connections to separate system processes, so they never carry the app's identity. Chrome, Firefox, Arc and Brave all work.</li>
+        <li>Safari and other browsers built on Apple's WebKit, like Orion, can't be routed, so VPNonly won't switch them on. WebKit hands their connections to separate system processes, so they never carry the app's identity. Chrome, Firefox, Arc, Brave and Helium all work.</li>
         <li>Connections are tunneled, but DNS lookups still go through your normal resolver. If you need to hide which sites you visit from your ISP, this isn't the right tool yet.</li>
         <li>Moving an app in or out drops its open connections. Most apps reconnect on their own, but a large upload would start over.</li>
         <li>It isn't signed by Apple yet, so you allow it once in System Settings on first launch. <a href="install.html">Here's the full setup guide.</a></li>
@@ -420,12 +421,15 @@
 })();
 
 // How it works: wires from each app into VPNonly, and out to the tunnel or
-// home, drawn from where the boxes actually sit so they fit any screen.
+// home, drawn from where the boxes actually sit so they fit any screen. The
+// switches work: flip one and its wire moves. With none on, the tunnel sits
+// there unused, which is exactly how the app starts.
 (() => {
   const fc = document.querySelector(".flowchart");
   if (!fc) return;
   const svg = fc.querySelector(".wires"), hub = fc.querySelector(".fc-hub");
   const apps = [...fc.querySelectorAll(".fc-app")];
+  const isOn = el => el.classList.contains("on");
   const outs = [[fc.querySelector(".fc-dest.vpn"), "vpn", 3, 1.8], [fc.querySelector(".fc-dest.home"), "home", 4, 2.8]];
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const NS = "http://www.w3.org/2000/svg", XL = "http://www.w3.org/1999/xlink";
@@ -433,54 +437,109 @@
     const r = el.getBoundingClientRect(), f = fc.getBoundingClientRect();
     return { x: r.left - f.left, y: r.top - f.top, w: r.width, h: r.height };
   };
+  // Each wire keeps its path and its moving dots, so flipping a switch only
+  // restyles that one wire: its colour fades across and its dots fade in,
+  // instead of the whole drawing being thrown away and redrawn.
+  let wires = [];
+  const pulses = (w, kind, dots, dur) => {
+    w.dots.forEach(c => c.remove());
+    w.dots = [];
+    if (still) return;
+    for (let k = 0; k < dots; k++) {
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("r", kind === "vpn" ? 3.2 : 2.4);
+      c.setAttribute("class", "pulse " + kind);
+      const m = document.createElementNS(NS, "animateMotion");
+      m.setAttribute("dur", dur + "s");
+      m.setAttribute("repeatCount", "indefinite");
+      m.setAttribute("begin", (-k * dur / dots).toFixed(2) + "s");
+      const mp = document.createElementNS(NS, "mpath");
+      mp.setAttribute("href", "#" + w.path.id);
+      mp.setAttributeNS(XL, "xlink:href", "#" + w.path.id);
+      m.appendChild(mp);
+      c.appendChild(m);
+      svg.appendChild(c);
+      w.dots.push(c);
+    }
+  };
+  const style = (w, kind, dots, dur) => {
+    if (w.kind === kind) return;
+    w.kind = kind;
+    w.path.setAttribute("class", "wire " + kind);
+    pulses(w, kind, dots, dur);
+  };
+  const restyle = () => {
+    const idle = !apps.some(isOn);
+    fc.classList.toggle("idle", idle);
+    apps.forEach((el, i) => {
+      const on = isOn(el);
+      style(wires[i], on ? "vpn" : "home", on ? 2 : 1, on ? 1.6 : 2.6);
+    });
+    outs.forEach(([, kind, dots, dur], j) => {
+      const w = wires[apps.length + j];
+      if (kind === "vpn" && idle) style(w, "idle", 0, dur);
+      else style(w, kind, dots, dur);
+    });
+  };
   const draw = () => {
     const f = fc.getBoundingClientRect();
     svg.setAttribute("viewBox", "0 0 " + f.width + " " + f.height);
     svg.textContent = "";
+    wires = [];
     const down = getComputedStyle(fc).getPropertyValue("--fc-dir").trim() === "column";
     const H = box(hub);
     const curve = (a, b) => down
       ? "M" + a[0] + " " + a[1] + "C" + a[0] + " " + (a[1] + b[1]) / 2 + " " + b[0] + " " + (a[1] + b[1]) / 2 + " " + b[0] + " " + b[1]
       : "M" + a[0] + " " + a[1] + "C" + (a[0] + b[0]) / 2 + " " + a[1] + " " + (a[0] + b[0]) / 2 + " " + b[1] + " " + b[0] + " " + b[1];
-    let n = 0;
-    const wire = (a, b, kind, dots, dur) => {
+    const wire = (a, b) => {
       const p = document.createElementNS(NS, "path");
       p.setAttribute("d", curve(a, b));
-      p.setAttribute("class", "wire " + kind);
-      p.id = "fcw" + n++;
+      p.id = "fcw" + wires.length;
       svg.appendChild(p);
-      if (still) return;
-      for (let k = 0; k < dots; k++) {
-        const c = document.createElementNS(NS, "circle");
-        c.setAttribute("r", kind === "vpn" ? 3.2 : 2.4);
-        c.setAttribute("class", "pulse " + kind);
-        const m = document.createElementNS(NS, "animateMotion");
-        m.setAttribute("dur", dur + "s");
-        m.setAttribute("repeatCount", "indefinite");
-        m.setAttribute("begin", (-k * dur / dots).toFixed(2) + "s");
-        const mp = document.createElementNS(NS, "mpath");
-        mp.setAttribute("href", "#" + p.id);
-        mp.setAttributeNS(XL, "xlink:href", "#" + p.id);
-        m.appendChild(mp);
-        c.appendChild(m);
-        svg.appendChild(c);
-      }
+      wires.push({ path: p, dots: [], kind: null });
     };
     apps.forEach((el, i) => {
       const A = box(el), off = (i - (apps.length - 1) / 2) * (down ? 10 : 9);
-      const from = down ? [A.x + A.w / 2, A.y + A.h] : [A.x + A.w, A.y + A.h / 2];
-      const to = down ? [H.x + H.w / 2 + off, H.y] : [H.x, H.y + H.h / 2 + off];
-      const on = el.classList.contains("on");
-      wire(from, to, on ? "vpn" : "home", on ? 2 : 1, on ? 1.6 : 2.6);
+      wire(down ? [A.x + A.w / 2, A.y + A.h] : [A.x + A.w, A.y + A.h / 2],
+           down ? [H.x + H.w / 2 + off, H.y] : [H.x, H.y + H.h / 2 + off]);
     });
-    outs.forEach(([el, kind, dots, dur], i) => {
+    outs.forEach(([el], i) => {
       const D = box(el), off = i ? 12 : -12;
-      const from = down ? [H.x + H.w / 2 + off, H.y + H.h] : [H.x + H.w, H.y + H.h / 2 + off];
-      const to = down ? [D.x + D.w / 2, D.y] : [D.x, D.y + D.h / 2];
-      wire(from, to, kind, dots, dur);
+      wire(down ? [H.x + H.w / 2 + off, H.y + H.h] : [H.x + H.w, H.y + H.h / 2 + off],
+           down ? [D.x + D.w / 2, D.y] : [D.x, D.y + D.h / 2]);
     });
+    restyle();
   };
   draw();
+
+  // Said aloud as well: the drawing itself is hidden from screen readers.
+  const say = document.getElementById("fc-say");
+  const names = list => list.length < 2 ? list.join("")
+    : list.slice(0, -1).join(", ") + " and " + list[list.length - 1];
+  const describe = () => {
+    if (!say) return;
+    const on = apps.filter(isOn).map(el => el.getAttribute("aria-label"));
+    const off = apps.filter(el => !isOn(el)).map(el => el.getAttribute("aria-label"));
+    if (!on.length) { say.textContent = "Nothing is switched on, so the tunnel sits unused and every app keeps your normal connection at home."; return; }
+    say.textContent = names(on) + (on.length === 1 ? " is" : " are") + " switched on, so VPNonly sends "
+      + (on.length === 1 ? "it" : "them") + " through the WireGuard tunnel to Singapore."
+      + (off.length ? " " + names(off) + (off.length === 1 ? " is" : " are") + " off, so "
+        + (off.length === 1 ? "it keeps" : "they keep") + " your normal connection at home." : "");
+  };
+  apps.forEach(el => {
+    const flip = () => {
+      const on = !isOn(el);
+      el.classList.toggle("on", on);
+      el.setAttribute("aria-checked", on ? "true" : "false");
+      el.querySelector(".sw").classList.toggle("on", on);
+      restyle();
+      describe();
+    };
+    el.addEventListener("click", flip);
+    el.addEventListener("keydown", e => {
+      if (e.key === " " || e.key === "Enter") { e.preventDefault(); flip(); }
+    });
+  });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   let t;
   addEventListener("resize", () => { clearTimeout(t); t = setTimeout(draw, 120); });
@@ -504,7 +563,7 @@
   const cursor = desk.querySelector(".cursor");
   const exit = "NordVPN · Singapore";
   const states = {
-    idle:      { busy: 0, primary: "Connected to " + exit, live: "no apps routed yet", check: "", on: 0, sub: "", ok: 0, ips: 0, shield: 0 },
+    idle:      { busy: 0, primary: "No apps on the VPN yet", live: "Connected to " + exit + ". Switch on an app below to use it.", check: "", on: 0, sub: "", ok: 0, ips: 0, shield: 0 },
     moving:    { busy: 1, primary: "Moving Google Chrome into the VPN…", live: "", check: "Check", on: 1, sub: "joining the VPN…", ok: 0, ips: 0, shield: 0 },
     protected: { busy: 0, primary: "Google Chrome is protected", live: "Use Check any time to verify the public exit", check: "Check", on: 1, sub: "in VPN · " + exit, ok: 1, ips: 0, shield: 1 },
     checking:  { busy: 0, primary: "Checking Google Chrome…", live: "Use Check any time to verify the public exit", check: "Checking…", on: 1, sub: "in VPN · " + exit, ok: 1, ips: 0, shield: 1 },
@@ -522,6 +581,8 @@
     ui.sub.textContent = s.sub;
     ui.sub.classList.toggle("ok", !!s.ok);
     pop.toggleAttribute("data-busy", !!s.busy);
+    // Green only once an app is on the VPN, as in the app since 1.9.24.
+    pop.toggleAttribute("data-up", !!s.shield);
     desk.dataset.shield = s.shield ? "on" : "off";
   };
 

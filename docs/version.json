@@ -1,5 +1,5 @@
 {
-  "version": "1.9.20",
+  "version": "1.9.25",
   "url": "https://vpnonly.app/",
-  "notes": "Check tests every app on the VPN, and the popup is more compact."
+  "notes": "An app you switch on now stays where it is in the list, so you see its switch flip, and joins Your apps the next time you open VPNonly."
 }

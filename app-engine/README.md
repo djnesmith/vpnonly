@@ -10,6 +10,16 @@ The engine:
 - records and validates VPNonly's exact root process, interface and socket;
 - changes only the dedicated `com.apple/vpnonly` PF anchor during normal use;
 - routes or blocks private per-app groups without changing the Mac's default route;
+- with the app's Allow Local Network setting on (the default), lets those
+  groups reach the private networks, /16 or narrower, that the Mac is on over
+  Wi-Fi, Ethernet or a bridge, from its own address there, plus link-local
+  addresses from its own link-local address and link-local multicast
+  (224.0.0.0/24). Each network's router is reachable only on ports 53, 80 and
+  443, which on most routers keeps its port-mapping services (UPnP, NAT-PMP,
+  PCP) out of reach, and ports 1900 and 5351 are blocked on every local
+  address. Every other destination still goes through the tunnel, and the
+  engine leaves local access out while a system proxy is set or the proxy
+  settings can't be read;
 - tears down only a tunnel that its root-owned state proves VPNonly created.
 
 The command-line version at the repository root (`vpnonly`, installed with

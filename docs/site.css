@@ -227,6 +227,16 @@ figure.demo { margin: 26px 0 30px; }
 figure.demo .shot { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #000; }
 figure.demo video { width: 100%; height: auto; }
 figure.demo figcaption { margin-top: 10px; font-size: 15px; color: var(--muted); }
+/* the install page's popup you can try, next to the walkthrough video */
+figure.trypop { margin: 26px 0 30px; display: grid; justify-items: center; gap: 12px; }
+.trypop .sw { border: 0; padding: 0; cursor: pointer; }
+.trypop .p-check { background: none; border: 0; padding: 0; font: 500 10.5px/1.25 var(--sans); color: var(--mac-blue); cursor: pointer; }
+.trypop .sw:focus-visible, .trypop .p-check:focus-visible { outline: 2px solid var(--mac-blue); outline-offset: 2px; }
+.trypop .p-btn[hidden] { display: none; }
+.trypop .p-ips { overflow: hidden; }
+.trypop .p-live { min-height: 12.5px; }
+.trypop .p-live:empty { display: block; } /* keeps the headline still while the app is busy */
+.trypop figcaption { max-width: 520px; font-size: 15px; color: var(--muted); text-align: center; }
 
 .ownerbar { background: var(--soft); border-radius: 10px; padding: 14px 16px; font-size: 16px !important; }
 
@@ -386,6 +396,21 @@ figure.demo figcaption { margin-top: 10px; font-size: 15px; color: var(--muted);
 .fc-app img { width: 28px; height: 28px; flex: none; }
 .fc-app span { flex: 1; }
 .fc-app.on { border-color: rgba(40, 205, 65, .6); box-shadow: 0 0 0 3px rgba(40, 205, 65, .13); }
+/* the switches work: flip one and its wire moves */
+.fc-app { cursor: pointer; user-select: none; -webkit-user-select: none; transition: border-color .2s, box-shadow .2s; }
+.fc-app:hover { border-color: var(--underline); }
+.fc-app.on:hover { border-color: rgba(40, 205, 65, .85); }
+.fc-app:focus-visible { outline: 2px solid var(--mac-blue); outline-offset: 2px; }
+.wire { transition: stroke .4s ease, stroke-width .4s ease, stroke-opacity .4s ease; }
+.wire.idle { stroke-dasharray: 4 5; stroke-opacity: .7; }
+.pulse { animation: fc-pulse-in .5s ease-out both; }
+@keyframes fc-pulse-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .wire { transition: none; } .pulse { animation: none; } }
+.fc-dest, .fc-hub { transition: border-color .25s, box-shadow .25s; }
+.flowchart.idle .fc-dest.vpn { border-color: var(--line); box-shadow: none; }
+.flowchart.idle .fc-dest.vpn .fc-k::before { background: var(--muted); box-shadow: none; }
+.flowchart.idle .fc-hub { box-shadow: 0 0 0 6px var(--card); }
+.fc-hint { margin-top: 14px; text-align: center; font-size: 14px; color: var(--muted); }
 .fc-hub {
   display: grid; justify-items: center; gap: 3px; padding: 20px 24px 18px; text-align: center;
   border-radius: 20px; background: var(--bg); border: 1px solid var(--line);
