@@ -1,5 +1,5 @@
 {
-  "version": "1.9.25",
+  "version": "1.9.26",
   "url": "https://vpnonly.app/",
-  "notes": "An app you switch on now stays where it is in the list, so you see its switch flip, and joins Your apps the next time you open VPNonly."
+  "notes": "Imports from VPN Unlimited now show its name."
 }
