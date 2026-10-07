@@ -7,13 +7,25 @@
     <language>en</language>
 
     <item>
+      <title>Version 1.9.26</title>
+      <pubDate>Tue, 06 Oct 2026 00:07:09 +0530</pubDate>
+      <sparkle:version>1.9.26</sparkle:version>
+      <sparkle:shortVersionString>1.9.26</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[<p>Imports from VPN Unlimited now show its name.</p>]]></description>
+      <enclosure url="https://vpnonly.app/VPNonly-1.9.26.zip"
+                 sparkle:edSignature="Vblv9kaMYlNrjYDtzBRwdoD6A2U9dNWQIWLo20FljMWLyR5ABKyLvKVijRgKGHx6qdrZGhNnD7K0wgGTHTl3Aw=="
+                 length="3340021"
+                 type="application/octet-stream" />
+    </item>
+    <item>
       <title>Version 1.9.25</title>
       <pubDate>Thu, 01 Oct 2026 17:24:29 +0530</pubDate>
       <sparkle:version>1.9.25</sparkle:version>
       <sparkle:shortVersionString>1.9.25</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
       <description><![CDATA[<p>A small one, but you'll notice it every time you switch an app on.</p><ul><li><b>Switches stay where you flip them.</b> An app switched on further down the list used to jump straight into Your apps, so you never saw its switch move. Now it stays put while it joins the VPN, and moves up to Your apps the next time you open VPNonly, or when you clear a search.</li><li><b>No jumping the other way either.</b> Switching an app off no longer pulls it out of Your apps mid-click.</li></ul><p>Coming from 1.9.22 or later, this update installs without asking for your password.</p>]]></description>
-      <enclosure url="https://vpnonly.app/VPNonly-1.9.25.zip"
+      <enclosure url="https://github.com/kanishkdan/vpnonly/releases/download/v1.9.25/VPNonly-1.9.25.zip"
                  sparkle:edSignature="g7Far/ZITKApJcfyFGuy/CY60Ni04g6HUfajal2Y5DnOOe22UuRRUi5QByiraRphtVcB74qn7i6tOZSA/aUTCw=="
                  length="3405562"
                  type="application/octet-stream" />
