@@ -356,15 +356,16 @@ fi
 # a dangerous false success. NAT is required only for a route-through load;
 # block-only reconciliation can still protect apps when a custom main ruleset
 # omitted the stock NAT hook.
+# Drain rule output: grep -q can SIGPIPE printf and fail a valid hook under pipefail.
 if [ "$NVPNG" -gt 0 ]; then
     main_filter=$($PFCTL -s rules 2>/dev/null) || die "cannot inspect active PF filter rules"
     printf '%s\n' "$main_filter" |
-        $GREP -Eq '^[[:space:]]*anchor "com\.apple/\*" all[[:space:]]*$' ||
+        $GREP -E '^[[:space:]]*anchor "com\.apple/\*" all[[:space:]]*$' >/dev/null ||
         die "active PF filter hook is missing or customized"
     if [ "$ROUTE_THROUGH" -eq 1 ]; then
         main_nat=$($PFCTL -s nat 2>/dev/null) || die "cannot inspect active PF NAT rules"
         printf '%s\n' "$main_nat" |
-            $GREP -Eq '^[[:space:]]*nat-anchor "com\.apple/\*" all[[:space:]]*$' ||
+            $GREP -E '^[[:space:]]*nat-anchor "com\.apple/\*" all[[:space:]]*$' >/dev/null ||
             die "active PF NAT hook is missing or customized"
     fi
 fi

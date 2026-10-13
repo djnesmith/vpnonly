@@ -9,9 +9,9 @@
  
  	logger.Verbosef("Device started")
  
---- /dev/null	2026-09-02 11:10:28
-+++ b/source_nat.go	2026-09-02 11:10:27
-@@ -0,0 +1,311 @@
+--- /dev/null
++++ b/source_nat.go
+@@ -0,0 +1,394 @@
 +/* SPDX-License-Identifier: MIT
 + *
 + * VPNonly addition: rewrite the inner IPv4 source of packets entering the
@@ -97,7 +97,7 @@
 +
 +	mu       sync.Mutex
 +	flows    map[flowKey][4]byte // flow -> original source address
-+	seen     map[flowKey]int64   // flow -> unix seconds of last egress packet
++	seen     map[flowKey]int64   // flow -> unix seconds of last packet in either direction
 +	frags    map[fragKey][4]byte // in-flight fragmented reply -> original destination
 +	fragSeen map[fragKey]int64
 +	inserts  int
@@ -181,15 +181,18 @@
 +		copy(key.remoteIP[:], p[16:20])
 +
 +		d.mu.Lock()
-+		if _, exists := d.flows[key]; !exists && len(d.flows) >= flowLimit {
++		_, exists := d.flows[key]
++		if !exists && len(d.flows) >= flowLimit {
 +			d.sweepLocked(true)
 +		}
-+		if _, exists := d.flows[key]; exists || len(d.flows) < flowLimit {
++		if exists || len(d.flows) < flowLimit {
 +			d.flows[key] = src
 +			d.seen[key] = time.Now().Unix()
-+			d.inserts++
-+			if d.inserts%sweepEvery == 0 {
-+				d.sweepLocked(false)
++			if !exists {
++				d.inserts++
++				if d.inserts%sweepEvery == 0 {
++					d.sweepLocked(false)
++				}
 +			}
 +		}
 +		d.mu.Unlock()
@@ -232,8 +235,15 @@
 +		}
 +		key.localPort = binary.BigEndian.Uint16(p[ihl+2 : ihl+4]) // reply dst port
 +		key.remotePort = binary.BigEndian.Uint16(p[ihl : ihl+2])  // reply src port
-+	case 1: // ICMP echo reply
-+		if len(p) < ihl+8 || p[ihl] != 0 {
++	case 1:
++		if len(p) < ihl+8 {
++			return
++		}
++		if p[ihl] == 3 || p[ihl] == 11 || p[ihl] == 12 {
++			d.icmpError(p, ihl)
++			return
++		}
++		if p[ihl] != 0 { // only echo replies have an identifier to match
 +			return
 +		}
 +		key.localPort = binary.BigEndian.Uint16(p[ihl+4 : ihl+6])
@@ -244,6 +254,9 @@
 +
 +	d.mu.Lock()
 +	orig, exists := d.flows[key]
++	if exists {
++		d.seen[key] = time.Now().Unix()
++	}
 +	if exists && p[6]&0x20 != 0 { // more fragments follow: remember for them
 +		if len(d.frags) >= fragLimit {
 +			d.sweepLocked(false)
@@ -257,6 +270,76 @@
 +	}
 +
 +	rewrite(p, ihl, proto, false, 16, dst, orig)
++}
++
++// ICMP errors quote the outgoing packet, not the reply's transport ports.
++// Reverse both addresses so the kernel can match the original socket (and,
++// for fragmentation-needed errors, learn the path MTU). Unknown or malformed
++// quotes remain untouched. PF policy is unchanged.
++func (d *natDevice) icmpError(p []byte, ihl int) {
++	total := int(binary.BigEndian.Uint16(p[2:4]))
++	if total > len(p) || total < ihl+8+20+8 ||
++		binary.BigEndian.Uint16(p[6:8])&0x3fff != 0 || checksum(p[:ihl]) != 0 {
++		return // fragmented ICMP errors need reassembly before translation
++	}
++	msg := p[ihl:total]
++	if checksum(msg) != 0 {
++		return
++	}
++	quote := msg[8:]
++	// RFC 4884's optional length bounds the quote before any ICMP extensions.
++	if n := int(msg[5]) * 4; n != 0 {
++		if n > len(quote) {
++			return
++		}
++		quote = quote[:n]
++	}
++	qihl, proto, frag, ok := header(quote)
++	if !ok || frag || len(quote) < qihl+8 || checksum(quote[:qihl]) != 0 ||
++		(proto != 6 && proto != 17) {
++		return
++	}
++	qtotal := int(binary.BigEndian.Uint16(quote[2:4]))
++	if qtotal < qihl+8 {
++		return
++	}
++	if qtotal < len(quote) {
++		quote = quote[:qtotal]
++	}
++	var src [4]byte
++	copy(src[:], quote[12:16])
++	if src != d.natIP {
++		return
++	}
++	key := flowKey{proto: proto,
++		localPort:  binary.BigEndian.Uint16(quote[qihl : qihl+2]),
++		remotePort: binary.BigEndian.Uint16(quote[qihl+2 : qihl+4])}
++	copy(key.remoteIP[:], quote[16:20])
++	d.mu.Lock()
++	orig, exists := d.flows[key]
++	d.mu.Unlock()
++	if !exists {
++		return
++	}
++	rewrite(quote, qihl, proto, false, 12, src, orig)
++	msg[2], msg[3] = 0, 0
++	binary.BigEndian.PutUint16(msg[2:4], checksum(msg))
++	rewrite(p, ihl, 1, false, 16, d.natIP, orig)
++}
++
++func checksum(p []byte) uint16 {
++	var sum uint32
++	for len(p) >= 2 {
++		sum += uint32(binary.BigEndian.Uint16(p[:2]))
++		p = p[2:]
++	}
++	if len(p) == 1 {
++		sum += uint32(p[0]) << 8
++	}
++	for sum>>16 != 0 {
++		sum = sum&0xffff + sum>>16
++	}
++	return ^uint16(sum)
 +}
 +
 +// rewrite replaces the 4-byte address at p[at:at+4] and repairs the IPv4
@@ -323,16 +406,18 @@
 +		idle /= 2
 +	}
 +}
---- /dev/null	2026-09-02 11:10:28
-+++ b/source_nat_test.go	2026-09-02 11:10:27
-@@ -0,0 +1,290 @@
+--- /dev/null
++++ b/source_nat_test.go
+@@ -0,0 +1,514 @@
 +package main
 +
 +import (
 +	"bytes"
 +	"encoding/binary"
++	"fmt"
 +	"os"
 +	"testing"
++	"time"
 +
 +	"golang.zx2c4.com/wireguard/tun"
 +)
@@ -614,5 +699,227 @@
 +	}
 +	if w := l4Ck(17, remote[:], lan[:], f.out[0][20:]); binary.BigEndian.Uint16(f.out[0][26:28]) != w {
 +		t.Fatal("first fragment udp cksum wrong after reversal")
++	}
++}
++
++func TestExistingFlowDoesNotTriggerTableSweep(t *testing.T) {
++	d := natted(&fake{})
++	// Keep a stale sentinel to detect a full-table sweep during established traffic.
++	stale := flowKey{proto: 6, localPort: 1, remotePort: 443, remoteIP: remote}
++	d.flows[stale], d.seen[stale] = lan, 1
++	p := pkt(6, lan, remote, 52000, 443, 0)
++	for i := 0; i < sweepEvery; i++ {
++		copy(p[12:16], lan[:])
++		d.egress(p)
++	}
++	if _, present := d.flows[stale]; !present {
++		t.Fatal("established-flow packets triggered a full-table sweep")
++	}
++}
++
++func TestReceivingFlowSurvivesIdleSweep(t *testing.T) {
++	d := natted(&fake{})
++	d.egress(pkt(17, lan, remote, 52000, 443, 0))
++	key := flowKey{proto: 17, localPort: 52000, remotePort: 443, remoteIP: remote}
++	d.seen[key] = time.Now().Unix() - flowIdle - 1
++	reply := pkt(17, remote, tunIP, 443, 52000, 0)
++	d.ingress(reply)
++	d.sweepLocked(false)
++	if _, present := d.flows[key]; !present {
++		t.Fatal("actively receiving flow was deleted as idle")
++	}
++}
++
++// A router's minimum-length ICMP error quotes an IPv4 header and 8 transport bytes.
++func tooBig(quoted []byte, n int) []byte {
++	p := make([]byte, 28+n)
++	p[0], p[8], p[9] = 0x45, 64, 1
++	binary.BigEndian.PutUint16(p[2:4], uint16(len(p)))
++	copy(p[12:16], []byte{192, 0, 2, 1})
++	copy(p[16:20], tunIP[:])
++	p[20], p[21] = 3, 4
++	binary.BigEndian.PutUint16(p[26:28], 1280)
++	copy(p[28:], quoted[:n])
++	binary.BigEndian.PutUint16(p[22:24], ^fold(sum(p[20:], 0)))
++	binary.BigEndian.PutUint16(p[10:12], ipCk(p[:20]))
++	return p
++}
++
++func TestPathMTUErrorReachesOriginalFlow(t *testing.T) {
++	d := natted(&fake{})
++	outbound := pkt(6, lan, remote, 52000, 443, 0)
++	d.egress(outbound)
++	p := tooBig(outbound, 28)
++	d.ingress(p)
++	if !bytes.Equal(p[16:20], lan[:]) || !bytes.Equal(p[40:44], lan[:]) {
++		t.Fatal("ICMP too-big retains tunnel destination and quoted source; original TCP socket cannot match it")
++	}
++	if binary.BigEndian.Uint16(p[26:28]) != 1280 || fold(sum(p[20:], 0)) != 0xffff || ipCk(p[:20]) != binary.BigEndian.Uint16(p[10:12]) || ipCk(p[28:48]) != binary.BigEndian.Uint16(p[38:40]) {
++		t.Fatal("MTU or checksums not preserved")
++	}
++}
++
++func TestNewFlowsStillSweepIdleEntries(t *testing.T) {
++	d := natted(&fake{})
++	stale := flowKey{proto: 6, localPort: 60000, remotePort: 443, remoteIP: remote}
++	d.flows[stale], d.seen[stale] = lan, 1
++	for i := 0; i < sweepEvery; i++ {
++		d.egress(pkt(6, lan, remote, uint16(i), 443, 0))
++	}
++	if _, present := d.flows[stale]; present || len(d.flows) != sweepEvery {
++		t.Fatal("new-flow cleanup failed or removed live flows")
++	}
++}
++
++func repairErrorChecksums(p []byte) {
++	ihl := int(p[0]&15) * 4
++	p[ihl+2], p[ihl+3] = 0, 0
++	binary.BigEndian.PutUint16(p[ihl+2:ihl+4], ^fold(sum(p[ihl:], 0)))
++	binary.BigEndian.PutUint16(p[10:12], ipCk(p[:ihl]))
++}
++
++func TestICMPErrorVariants(t *testing.T) {
++	for _, proto := range []byte{6, 17} {
++		for _, kind := range []byte{3, 11, 12} {
++			t.Run(fmt.Sprintf("proto%d/type%d", proto, kind), func(t *testing.T) {
++				d := natted(&fake{})
++				outbound := pkt(proto, lan, remote, 52000, 443, 0)
++				d.egress(outbound)
++				p := tooBig(outbound, len(outbound))
++				p[20], p[21] = kind, 0
++				repairErrorChecksums(p)
++				d.ingress(p)
++				if !bytes.Equal(p[16:20], lan[:]) || !bytes.Equal(p[40:44], lan[:]) || fold(sum(p[20:], 0)) != 0xffff {
++					t.Fatal("error translation failed")
++				}
++				q := p[28:]
++				off := map[byte]int{6: 36, 17: 26}[proto]
++				if binary.BigEndian.Uint16(q[off:off+2]) != l4Ck(proto, lan[:], remote[:], q[20:]) {
++					t.Fatal("quoted transport checksum invalid")
++				}
++			})
++		}
++	}
++}
++
++func TestICMPErrorWithOptionsAndExtensions(t *testing.T) {
++	d := natted(&fake{})
++	base := pkt(6, lan, remote, 52000, 443, 0)
++	q := append(append(append([]byte{}, base[:20]...), 1, 1, 1, 1), base[20:]...)
++	q[0] = 0x46
++	binary.BigEndian.PutUint16(q[2:4], uint16(len(q)))
++	binary.BigEndian.PutUint16(q[10:12], ipCk(q[:24]))
++	d.egress(q)
++	p := tooBig(q, len(q))
++	// Pad quoted datagram to RFC 4884's minimum, then add opaque extension bytes.
++	p = append(p, make([]byte, 128-len(q))...)
++	extension := []byte{0x20, 0, 0xaa, 0xbb, 0, 4, 1, 1}
++	p = append(p, extension...)
++	p[25] = 32
++	binary.BigEndian.PutUint16(p[2:4], uint16(len(p)))
++	repairErrorChecksums(p)
++	d.ingress(p)
++	if !bytes.Equal(p[16:20], lan[:]) || !bytes.Equal(p[40:44], lan[:]) || !bytes.Equal(p[len(p)-len(extension):], extension) || fold(sum(p[20:], 0)) != 0xffff {
++		t.Fatal("options/extension translation corrupted packet")
++	}
++	if binary.BigEndian.Uint16(p[38:40]) != ipCk(p[28:52]) || binary.BigEndian.Uint16(p[68:70]) != l4Ck(6, lan[:], remote[:], p[52:72]) {
++		t.Fatal("quoted option-header checksums invalid")
++	}
++}
++
++func TestICMPInvalidAndUnmatchedRemainUntouched(t *testing.T) {
++	mutations := map[string]func([]byte){
++		"outer-length-overrun":     func(p []byte) { binary.BigEndian.PutUint16(p[2:4], 65535) },
++		"outer-length-short":       func(p []byte) { binary.BigEndian.PutUint16(p[2:4], 28) },
++		"fragmented-error":         func(p []byte) { p[6] |= 0x20 },
++		"quoted-fragment":          func(p []byte) { p[35] = 1; binary.BigEndian.PutUint16(p[38:40], ipCk(p[28:48])) },
++		"quoted-length-short":      func(p []byte) { p[31] = 20; binary.BigEndian.PutUint16(p[38:40], ipCk(p[28:48])) },
++		"unknown-port":             func(p []byte) { p[49] ^= 1 },
++		"unknown-remote":           func(p []byte) { p[47] ^= 1; binary.BigEndian.PutUint16(p[38:40], ipCk(p[28:48])) },
++		"wrong-quoted-source":      func(p []byte) { p[43] ^= 1; binary.BigEndian.PutUint16(p[38:40], ipCk(p[28:48])) },
++		"bad-quoted-checksum":      func(p []byte) { p[38] ^= 1 },
++		"bad-quoted-header":        func(p []byte) { p[28] = 0x4f },
++		"extension-length-overrun": func(p []byte) { p[25] = 255 },
++		"extension-length-short":   func(p []byte) { p[25] = 1 },
++		"redirect":                 func(p []byte) { p[20] = 5 },
++	}
++	for name, mutate := range mutations {
++		t.Run(name, func(t *testing.T) {
++			d := natted(&fake{})
++			outbound := pkt(6, lan, remote, 52000, 443, 0)
++			d.egress(outbound)
++			p := tooBig(outbound, 28)
++			mutate(p)
++			repairErrorChecksums(p)
++			before := append([]byte{}, p...)
++			d.ingress(p)
++			if !bytes.Equal(p, before) {
++				t.Fatal("malformed/unmatched packet changed")
++			}
++		})
++	}
++	for _, offset := range []int{10, 22} {
++		d := natted(&fake{})
++		outbound := pkt(6, lan, remote, 52000, 443, 0)
++		d.egress(outbound)
++		p := tooBig(outbound, 28)
++		p[offset] ^= 1
++		before := append([]byte{}, p...)
++		d.ingress(p)
++		if !bytes.Equal(p, before) {
++			t.Fatal("bad outer checksum was repaired and admitted")
++		}
++	}
++	// Every truncated prefix must remain byte-for-byte unchanged without panicking.
++	d := natted(&fake{})
++	outbound := pkt(6, lan, remote, 52000, 443, 0)
++	d.egress(outbound)
++	p := tooBig(outbound, 28)
++	for size := 0; size < len(p); size++ {
++		prefix := append([]byte{}, p[:size]...)
++		d.ingress(prefix)
++		if !bytes.Equal(prefix, p[:size]) {
++			t.Fatalf("truncated prefix %d changed", size)
++		}
++	}
++}
++
++func TestBidirectionalConcurrentNAT(t *testing.T) {
++	d := natted(&fake{})
++	d.egress(pkt(6, lan, remote, 52000, 443, 0))
++	done := make(chan bool)
++	go func() {
++		for i := 0; i < 2000; i++ {
++			d.egress(pkt(6, lan, remote, 52000, 443, 0))
++		}
++		done <- true
++	}()
++	for i := 0; i < 2000; i++ {
++		p := pkt(6, remote, tunIP, 443, 52000, 0)
++		d.ingress(p)
++		if !bytes.Equal(p[16:20], lan[:]) {
++			t.Fatal("reply mapping lost")
++		}
++	}
++	<-done
++}
++
++func BenchmarkEstablishedNAT(b *testing.B) {
++	for _, flows := range []int{64, 4096, flowLimit} {
++		b.Run(fmt.Sprint(flows), func(b *testing.B) {
++			d := natted(&fake{})
++			now := time.Now().Unix()
++			for i := 0; i < flows; i++ {
++				key := flowKey{proto: 6, localPort: uint16(i), remotePort: 443, remoteIP: remote}
++				d.flows[key], d.seen[key] = lan, now
++			}
++			template := pkt(6, lan, remote, 52000, 443, 0)
++			p := make([]byte, len(template))
++			b.ResetTimer()
++			for i := 0; i < b.N; i++ {
++				copy(p, template)
++				d.egress(p)
++			}
++		})
 +	}
 +}

@@ -94,9 +94,7 @@ env GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 GOTOOLCHAIN=local \
 
 env GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 GOTOOLCHAIN=local \
     GOCACHE="$BUILD_DIR/gocache" GOMODCACHE="$BUILD_DIR/gomodcache" \
-    "$GO_BIN" -C "$SOURCE" test -run \
-    'TestTCPEgressAndReply|TestUDPZeroChecksumStaysZero|TestFragmentRewritesIPOnly|TestICMPEcho|TestPassthroughs|TestSweep' \
-    . >/dev/null || {
+    "$GO_BIN" -C "$SOURCE" test . >/dev/null || {
     echo "wireguard-go NAT tests failed" >&2
     exit 1
 }
