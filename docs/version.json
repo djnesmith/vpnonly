@@ -1,5 +1,5 @@
 {
-  "version": "1.9.26",
+  "version": "1.9.27",
   "url": "https://vpnonly.app/",
-  "notes": "Imports from VPN Unlimited now show its name."
+  "notes": "Fixes misleading licence connection errors, prevents false firewall-hook failures, and corrects connection tracking and network-error handling in the VPN engine."
 }
