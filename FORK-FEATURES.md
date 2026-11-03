@@ -18,6 +18,7 @@ Branch: `main`, merged from `upstream/main` (merge, never rebase).
 
 - Commits: `4ce3c89`
 - Files: `vpnonly` (dispatch near the end: `pick|rm|ls|down|all`), `up.sh` (writes `tunnel-server`), `down.sh` (removes it)
+- Upstream's `vpnonly import FILE.conf` (1.9.28) is kept, but in our pre-sudo `case` next to `help`, not upstream's, which rejected every other argument. Help prints header lines `2,11p`; adjust it when the header grows.
 - Check: `vpnonly ls` prints the server and exit IP; `vpnonly rm <App>` reopens it outside the tunnel.
 
 ## 3. Apps kept out of the picker, NordVPN app conflict
@@ -35,6 +36,7 @@ Docker (carries the vpn-inc proxy containers, must keep the normal route), the N
 - Commits: `4ce3c89`
 - Files: `up.sh`
 - Check: `echo us > ~/.config/vpnonly/country`, tick an app, then `vpnonly ls` shows a US exit.
+- Since 1.9.28 a saved `~/.config/vpnonly/provider.conf` (from `vpnonly import`) wins over NordVPN. Only a `COUNTRY` env var forces NordVPN (`NORD_ASKED`); the country file does not, so an import still takes effect.
 
 ## 5. Root hardening
 

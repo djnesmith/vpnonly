@@ -1,11 +1,12 @@
 #!/bin/bash
 # vpnonly — put the apps you pick on NordVPN, leave everything else alone.
 #
-#   vpnonly [pick]     tick running apps to put on the VPN, untick to take off
-#   vpnonly rm APP…    take apps off the VPN (quit, reopen normally)
-#   vpnonly ls         tunnel state, server, exit IP, apps on the VPN
-#   vpnonly down       take the tunnel down
-#   vpnonly all        hand the whole Mac back to the NordVPN app
+#   vpnonly [pick]            tick running apps to put on the VPN, untick to take off
+#   vpnonly rm APP…           take apps off the VPN (quit, reopen normally)
+#   vpnonly ls                tunnel state, server, exit IP, apps on the VPN
+#   vpnonly down              take the tunnel down
+#   vpnonly all               hand the whole Mac back to the NordVPN app
+#   vpnonly import FILE.conf  use this WireGuard config from now on (any provider)
 #
 # Everything underneath is up.sh, run.sh and down.sh; this is the front end.
 set -uo pipefail
@@ -22,8 +23,35 @@ while [ -L "$SELF" ]; do
 done
 DIR="$(cd "$(dirname "$SELF")" && pwd)"
 SELF="$DIR/$(basename "$SELF")"
-case "${1:-}" in -h|--help|help)
-    sed -n '2,10p' "$SELF" | sed 's/^# \{0,1\}//'; exit 0 ;;
+
+# Save a provider's WireGuard config as the one up.sh connects with. Runs as
+# you, before any sudo: it only reads your file and writes your own config
+# directory, so there is nothing to ask a password for.
+import_conf() {
+    local src="${1:-}" conf="$HOME/.config/vpnonly" tmp parsed
+    [ "$(id -u)" != 0 ] || { echo "run vpnonly import without sudo"; return 1; }
+    [ -n "$src" ] || { echo "usage: vpnonly import <provider.conf>"; return 1; }
+    [ -f "$src" ] || { echo "no such file: $src"; return 1; }
+    mkdir -p "$conf" && chmod 700 "$conf" || return 1
+    # Validate with the same parser up.sh uses, so a config that saves is one
+    # that connects. It also refuses files missing a key, address or endpoint.
+    tmp=$(mktemp "$conf/.import.XXXXXX") || return 1
+    parsed=$("$DIR/parse-wg.py" "$src" "$tmp") || { rm -f "$tmp"; return 1; }
+    # The file holds your private key: copy it with owner-only permissions,
+    # then swap it in whole so a failed copy never leaves half a config.
+    cp "$src" "$tmp" && chmod 600 "$tmp" && mv -f "$tmp" "$conf/provider.conf" ||
+        { rm -f "$tmp"; return 1; }
+    echo "Saved $(basename "$src") (server ${parsed#* }, tunnel address ${parsed%% *})."
+    echo "vpnonly connects with it from now on. Run vpnonly and turn an app on."
+    if [ -s "$conf/tunnel-if" ] && ifconfig "$(cat "$conf/tunnel-if")" >/dev/null 2>&1; then
+        echo "The tunnel is up now: run vpnonly down first, so it reconnects with this."
+    fi
+    echo "To go back to NordVPN, run $DIR/fetch-creds.sh."
+}
+
+case "${1:-}" in
+    -h|--help|help) sed -n '2,11p' "$SELF" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    import) shift; import_conf "$@"; exit ;;
 esac
 # sudo resets PATH, so re-exec by absolute path.
 [ "$(id -u)" = 0 ] || exec sudo -- "$SELF" "$@"
