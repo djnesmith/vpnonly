@@ -18,7 +18,7 @@ Branch: `main`, merged from `upstream/main` (merge, never rebase).
 
 - Commits: `4ce3c89`
 - Files: `vpnonly` (dispatch near the end: `pick|rm|ls|down|all`), `up.sh` (writes `tunnel-server`), `down.sh` (removes it)
-- Upstream's `vpnonly import FILE.conf` (1.9.28) is kept, but in our pre-sudo `case` next to `help`, not upstream's, which rejected every other argument. Help prints header lines `2,11p`; adjust it when the header grows.
+- Upstream's `vpnonly import FILE.conf` (1.9.28) is kept, but in our pre-sudo `case` next to `help`, not upstream's, which rejected every other argument. Help prints header lines `2,12p`; adjust it when the header grows.
 - Check: `vpnonly ls` prints the server and exit IP; `vpnonly rm <App>` reopens it outside the tunnel.
 
 ## 3. Apps kept out of the picker, NordVPN app conflict
@@ -53,3 +53,10 @@ The daily GitHub release check and "brew upgrade vpnonly" prompt are removed; th
 - Commits: `4ce3c89`
 - Files: `vpnonly`
 - Check: `grep -n check_for_update vpnonly` prints nothing.
+
+## 7. `vpnonly run` for terminal commands
+
+`vpnonly run CMD [ARGS…]` runs a terminal program inside the tunnel, in the same terminal. It finds CMD on your PATH before sudo, brings the tunnel up like the picker does, then hands off to `run.sh`, which refuses if the tunnel is down. The program gets sudo's environment (PATH reset); wrap it in `/usr/bin/env VAR=… CMD` to pass more. `~/bin/torlink` uses it.
+
+- Files: `vpnonly` (pre-sudo `run)` in the `help|import` case, `cmd_run`, dispatch). Help prints `2,12p`.
+- Check: `vpnonly run curl -s https://api.ipify.org` prints the VPN exit IP, not yours; with the tunnel down and up.sh failing, it prints an error and runs nothing.

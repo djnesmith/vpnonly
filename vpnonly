@@ -7,6 +7,7 @@
 #   vpnonly down              take the tunnel down
 #   vpnonly all               hand the whole Mac back to the NordVPN app
 #   vpnonly import FILE.conf  use this WireGuard config from now on (any provider)
+#   vpnonly run CMD [ARGS…]   run a terminal command inside the tunnel, here
 #
 # Everything underneath is up.sh, run.sh and down.sh; this is the front end.
 set -uo pipefail
@@ -50,8 +51,16 @@ import_conf() {
 }
 
 case "${1:-}" in
-    -h|--help|help) sed -n '2,11p' "$SELF" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help|help) sed -n '2,12p' "$SELF" | sed 's/^# \{0,1\}//'; exit 0 ;;
     import) shift; import_conf "$@"; exit ;;
+    run)
+        # Find the command with your PATH now: sudo resets it.
+        [ "$#" -ge 2 ] || { echo "usage: vpnonly run COMMAND [ARGS…]"; exit 1; }
+        if [ "$(id -u)" != 0 ]; then
+            BIN=$(command -v -- "$2" || true)
+            case "$BIN" in /*) ;; *) echo "not a program on your PATH: $2"; exit 1 ;; esac
+            set -- run "$BIN" "${@:3}"
+        fi ;;
 esac
 # sudo resets PATH, so re-exec by absolute path.
 [ "$(id -u)" = 0 ] || exec sudo -- "$SELF" "$@"
@@ -464,6 +473,15 @@ cmd_all() {
     echo "  Back to per-app: vpnonly pick"
 }
 
+# A terminal command in the group, in this terminal. run.sh refuses again if
+# the tunnel is down, so a failed up.sh never leaves it on the normal route.
+cmd_run() {
+    case "${1:-}" in /*) ;; *) echo "vpnonly run needs a program path"; return 1 ;; esac
+    ensure_nord_quit || return 1
+    ensure_tunnel || return 1
+    exec "$DIR/run.sh" "$@"
+}
+
 TERMINAL_APP=$(own_terminal)
 cmd="${1:-pick}"; [ "$#" -gt 0 ] && shift
 case "$cmd" in
@@ -472,5 +490,6 @@ case "$cmd" in
     ls)   cmd_ls ;;
     down) cmd_down ;;
     all)  cmd_all ;;
+    run)  cmd_run "$@" ;;
     *)    echo "unknown command: $cmd (try: vpnonly help)"; exit 1 ;;
 esac
