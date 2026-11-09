@@ -1,3 +1,5 @@
 vpnrun
 *.o
 .DS_Store
+/wireguard-go
+app-engine/bin/
