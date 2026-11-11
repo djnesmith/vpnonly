@@ -99,6 +99,7 @@ vpnonly            # tick running apps to put on the VPN, untick to take off
 vpnonly rm Slack   # take one off: quit it, reopen it normally
 vpnonly ls         # tunnel up/down, server, exit IP, apps on the VPN
 vpnonly down       # tunnel down (routed apps stay blocked until moved off)
+vpnonly down --if-idle  # tunnel down only if no app or command still uses it
 vpnonly all        # hand the whole Mac back to the NordVPN app
 ```
 

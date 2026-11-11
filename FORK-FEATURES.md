@@ -18,7 +18,7 @@ Branch: `main`, merged from `upstream/main` (merge, never rebase).
 
 - Commits: `4ce3c89`
 - Files: `vpnonly` (dispatch near the end: `pick|rm|ls|down|all`), `up.sh` (writes `tunnel-server`), `down.sh` (removes it)
-- Upstream's `vpnonly import FILE.conf` (1.9.28) is kept, but in our pre-sudo `case` next to `help`, not upstream's, which rejected every other argument. Help prints header lines `2,12p`; adjust it when the header grows.
+- Upstream's `vpnonly import FILE.conf` (1.9.28) is kept, but in our pre-sudo `case` next to `help`, not upstream's, which rejected every other argument. Help prints header lines `2,13p`; adjust it when the header grows.
 - Check: `vpnonly ls` prints the server and exit IP; `vpnonly rm <App>` reopens it outside the tunnel.
 
 ## 3. Apps kept out of the picker, NordVPN app conflict
@@ -58,5 +58,13 @@ The daily GitHub release check and "brew upgrade vpnonly" prompt are removed; th
 
 `vpnonly run CMD [ARGS…]` runs a terminal program inside the tunnel, in the same terminal. It finds CMD on your PATH before sudo, brings the tunnel up like the picker does, then hands off to `run.sh`, which refuses if the tunnel is down. The program gets sudo's environment (PATH reset); wrap it in `/usr/bin/env VAR=… CMD` to pass more. `~/bin/torlink` uses it.
 
-- Files: `vpnonly` (pre-sudo `run)` in the `help|import` case, `cmd_run`, dispatch). Help prints `2,12p`.
+- Files: `vpnonly` (pre-sudo `run)` in the `help|import` case, `cmd_run`, dispatch). Help prints `2,13p`.
 - Check: `vpnonly run curl -s https://api.ipify.org` prints the VPN exit IP, not yours; with the tunnel down and up.sh failing, it prints an error and runs nothing.
+
+## 8. `vpnonly down --if-idle`
+
+Takes the tunnel down only when no process is left in the vpnonly group. Otherwise it leaves it up and prints the apps and terminal commands still using it. Plain `down` is unchanged. `~/bin/torlink` calls it when torlink exits.
+
+- Commits: branch `vpnonly-down-if-idle`
+- Files: `vpnonly` (`cmd_down`, `group_cmds`, dispatch passes args to `down`). Help prints `2,13p`.
+- Check: with only `vpnonly run sleep 300` on the VPN, `vpnonly down --if-idle` prints `sleep` and `vpnonly ls` still shows the tunnel up; with nothing on it, the tunnel goes down.
