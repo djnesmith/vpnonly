@@ -68,3 +68,11 @@ Takes the tunnel down only when no process is left in the vpnonly group. Otherwi
 - Commits: branch `vpnonly-down-if-idle`
 - Files: `vpnonly` (`cmd_down`, `group_cmds`, dispatch passes args to `down`). Help prints `2,13p`.
 - Check: with only `vpnonly run sleep 300` on the VPN, `vpnonly down --if-idle` prints `sleep` and `vpnonly ls` still shows the tunnel up; with nothing on it, the tunnel goes down.
+
+## 9. wireguard-go in its own session
+
+`up.sh` starts wireguard-go through `perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV'`, so it leaves the caller's process group. Before, a Ctrl-C to a `vpnonly run` command (torlink) that had brought the tunnel up also killed the tunnel under every other app; `nohup` only blocks SIGHUP. macOS has no `setsid` command; perl ships with it and its `exec` keeps the PID that `tunnel-pid` records.
+
+- Commits: branch `vpnonly-wg-detach`
+- Files: `up.sh` (the `nohup ... "$WG_GO" -f utun` line)
+- Check: `ps -o pid,pgid -p "$(cat ~/.config/vpnonly/tunnel-pid)"` shows PID = PGID. Start torlink via `vpnonly run`, put another command on the VPN, Ctrl-C torlink: `vpnonly ls` still shows the tunnel up.

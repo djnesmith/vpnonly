@@ -160,9 +160,14 @@ dseditgroup -o read vpnonly >/dev/null 2>&1 || \
 # WG_NAT_SOURCE makes the patched wireguard-go rewrite each packet's inner
 # IPv4 source to the tunnel address, which PF cannot do (see below). Stock
 # wireguard-go ignores it.
+#
+# nohup only ignores SIGHUP. setsid gives wireguard-go its own session, so a
+# Ctrl-C to the terminal that brought the tunnel up (vpnonly run) cannot kill
+# it under other apps. macOS has no setsid command; perl's exec keeps the PID.
 NAMEFILE=$(mktemp)
 WG_TUN_NAME_FILE="$NAMEFILE" WG_NAT_SOURCE="$CLIENT_IP" \
-    nohup "$WG_GO" -f utun </dev/null >/dev/null 2>&1 &
+    nohup /usr/bin/perl -MPOSIX -e 'POSIX::setsid() or die "setsid: $!\n"; exec @ARGV or die "exec: $!\n"' \
+    "$WG_GO" -f utun </dev/null >/dev/null 2>&1 &
 WG_PID=$!
 for _ in $(seq 1 50); do [ -s "$NAMEFILE" ] && break; sleep 0.1; done
 IF=$(cat "$NAMEFILE" 2>/dev/null || true); rm -f "$NAMEFILE"
